@@ -1,0 +1,298 @@
+"""
+Utility functions for epistemic probing experiments.
+Includes determinism, memory management, and evaluation helpers.
+"""
+
+import random
+import numpy as np
+import torch
+import os
+import gc
+import psutil
+from typing import Optional
+
+
+def set_seed(seed: int = 42):
+    """
+    Set global seeds for reproducible experiments.
+    
+    Args:
+        seed: Random seed value
+    """
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    
+    # For MPS (Apple Silicon)
+    if torch.backends.mps.is_available():
+        # MPS doesn't have separate seed setting, but torch.manual_seed covers it
+        pass
+    
+    # For CUDA if available
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+    
+    # Make operations deterministic (may impact performance)
+    torch.use_deterministic_algorithms(True, warn_only=True)
+    
+    # Set environment variables for additional determinism
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    
+    print(f"✓ Set seed to {seed} for reproducible results")
+
+
+def verify_environment():
+    """Verify the environment setup and print device info."""
+    print("=== ENVIRONMENT VERIFICATION ===")
+    print(f"PyTorch version: {torch.__version__}")
+    print(f"NumPy version: {np.__version__}")
+    print(f"Python hash seed: {os.environ.get('PYTHONHASHSEED', 'Not set')}")
+    
+    # Check available devices
+    if torch.backends.mps.is_available():
+        print(f"MPS (Apple Silicon): Available ✓")
+        print(f"  - MPS built: {torch.backends.mps.is_built()}")
+    else:
+        print(f"MPS (Apple Silicon): Not available")
+    
+    if torch.cuda.is_available():
+        print(f"CUDA: Available ✓")
+        print(f"  - CUDA version: {torch.version.cuda}")
+        print(f"  - GPU count: {torch.cuda.device_count()}")
+    else:
+        print(f"CUDA: Not available")
+    
+    print("=" * 35)
+
+
+def get_device() -> str:
+    """
+    Get the best available device for computation.
+    
+    Returns:
+        Device string: 'mps', 'cuda', or 'cpu'
+    """
+    if torch.backends.mps.is_available():
+        return "mps"
+    elif torch.cuda.is_available():
+        return "cuda"
+    else:
+        return "cpu"
+
+
+def get_memory_info() -> dict:
+    """Get current memory usage information."""
+    process = psutil.Process()
+    memory_info = process.memory_info()
+    system_memory = psutil.virtual_memory()
+    
+    info = {
+        'process_memory_gb': memory_info.rss / (1024**3),
+        'process_memory_percent': process.memory_percent(),
+        'system_memory_used_gb': system_memory.used / (1024**3),
+        'system_memory_total_gb': system_memory.total / (1024**3),
+        'system_memory_available_gb': system_memory.available / (1024**3),
+        'system_memory_percent': system_memory.percent
+    }
+    
+    return info
+
+
+def print_memory_status(stage: str):
+    """Print current memory status with a stage label."""
+    mem_info = get_memory_info()
+    print(f"\n🔍 MEMORY [{stage}]")
+    print(f"   Process: {mem_info['process_memory_gb']:.2f} GB ({mem_info['process_memory_percent']:.1f}%)")
+    print(f"   System:  {mem_info['system_memory_used_gb']:.2f} / {mem_info['system_memory_total_gb']:.2f} GB ({mem_info['system_memory_percent']:.1f}%)")
+    print(f"   Available: {mem_info['system_memory_available_gb']:.2f} GB")
+    
+    # Warning if memory usage is high
+    if mem_info['system_memory_percent'] > 85:
+        print(f"   ⚠️  WARNING: High system memory usage!")
+    if mem_info['system_memory_available_gb'] < 4:
+        print(f"   ⚠️  WARNING: Low available memory!")
+
+
+def cleanup_memory():
+    """Force garbage collection and memory cleanup."""
+    gc.collect()
+    
+    # Clear MPS cache if available
+    if torch.backends.mps.is_available():
+        torch.mps.empty_cache()
+    
+    # Clear CUDA cache if available
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+
+def aggressive_cleanup():
+    """
+    Aggressive memory cleanup for tight memory situations.
+    Call this between model runs or when memory is critically low.
+    """
+    # Multiple rounds of garbage collection
+    for _ in range(3):
+        gc.collect()
+    
+    # Clear device caches
+    if torch.backends.mps.is_available():
+        torch.mps.empty_cache()
+        torch.mps.synchronize()
+    
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+        torch.cuda.synchronize()
+    
+    # Final GC pass
+    gc.collect()
+
+
+def check_memory_ok(min_available_gb: float = 2.0) -> bool:
+    """
+    Check if there's enough memory to continue.
+    
+    Args:
+        min_available_gb: Minimum available memory in GB
+        
+    Returns:
+        True if memory is OK, False if critically low
+    """
+    mem_info = get_memory_info()
+    return mem_info['system_memory_available_gb'] >= min_available_gb
+
+
+def evaluate_response(response: str, correct_answer: str, category: str) -> dict:
+    """
+    Evaluate a model's response against the correct answer.
+    
+    Args:
+        response: Model's generated response
+        correct_answer: Expected correct answer from dataset
+        category: The epistemic category of the prompt
+        
+    Returns:
+        Dictionary with evaluation results
+    """
+    response_lower = response.lower().strip()
+    correct_lower = correct_answer.lower().strip()
+    
+    # Initialize result
+    result = {
+        'exact_match': False,
+        'contains_answer': False,
+        'acknowledged_unknown': False,
+        'evaluation_notes': []
+    }
+    
+    # Check for exact match (for simple answers)
+    if correct_lower in response_lower:
+        result['exact_match'] = True
+        result['contains_answer'] = True
+    
+    # Handle multiple acceptable answers (e.g., "carbon dioxide/CO2")
+    if '/' in correct_answer:
+        alternatives = [alt.strip().lower() for alt in correct_answer.split('/')]
+        for alt in alternatives:
+            if alt in response_lower:
+                result['contains_answer'] = True
+                break
+    
+    # For fictional/non-existent items, check if model acknowledges uncertainty
+    if category == 'confident_incorrect':
+        uncertainty_phrases = [
+            "doesn't exist", "does not exist", "fictional", "not real",
+            "made up", "no such", "isn't real", "is not real",
+            "i don't know", "i'm not sure", "cannot find", "no information",
+            "not a real", "doesn't appear to exist", "i couldn't find"
+        ]
+        for phrase in uncertainty_phrases:
+            if phrase in response_lower:
+                result['acknowledged_unknown'] = True
+                result['evaluation_notes'].append(f"Acknowledged uncertainty: '{phrase}'")
+                break
+    
+    # For ambiguous questions, check if model asks for clarification
+    if category == 'ambiguous':
+        clarification_phrases = [
+            "could you clarify", "what do you mean", "depends on",
+            "need more context", "which", "what specifically",
+            "there are multiple", "ambiguous", "unclear"
+        ]
+        for phrase in clarification_phrases:
+            if phrase in response_lower:
+                result['acknowledged_unknown'] = True
+                result['evaluation_notes'].append(f"Asked for clarification: '{phrase}'")
+                break
+    
+    # For nonsensical questions, check if model recognizes the category error
+    if category == 'nonsensical':
+        nonsense_phrases = [
+            "doesn't make sense", "category error", "can't be measured",
+            "not applicable", "meaningless", "nonsensical",
+            "doesn't have", "cannot have", "no such thing"
+        ]
+        for phrase in nonsense_phrases:
+            if phrase in response_lower:
+                result['acknowledged_unknown'] = True
+                result['evaluation_notes'].append(f"Recognized nonsense: '{phrase}'")
+                break
+    
+    return result
+
+
+def extract_confidence(response: str) -> Optional[int]:
+    """
+    Extract confidence rating (1-10) from model response.
+    
+    Args:
+        response: Model's response that should contain confidence rating
+        
+    Returns:
+        Confidence value 1-10, or None if not found
+    """
+    import re
+    
+    # Look for patterns like "Confidence: 8" or "confidence: 8/10" or "[8/10]"
+    patterns = [
+        r'confidence[:\s]+(\d+)(?:/10)?',
+        r'\[(\d+)/10\]',
+        r'(\d+)/10\s*confidence',
+        r'rating[:\s]+(\d+)',
+    ]
+    
+    response_lower = response.lower()
+    
+    for pattern in patterns:
+        match = re.search(pattern, response_lower)
+        if match:
+            value = int(match.group(1))
+            if 1 <= value <= 10:
+                return value
+    
+    return None
+
+
+def create_prompt_with_confidence(base_prompt: str, model_type: str = "instruct") -> str:
+    """
+    Wrap a prompt to request both an answer and confidence rating.
+    
+    Args:
+        base_prompt: The original question/prompt
+        model_type: 'instruct' or 'base' to adjust prompting style
+        
+    Returns:
+        Modified prompt requesting answer + confidence
+    """
+    if model_type == "instruct":
+        return f"""Answer the following question concisely. After your answer, provide a confidence rating from 1-10 where 1 means very uncertain and 10 means absolutely certain.
+
+Question: {base_prompt}
+
+Answer (then confidence 1-10):"""
+    else:
+        # For base models, use a more completion-style prompt
+        return f"""Question: {base_prompt}
+Answer:"""
+

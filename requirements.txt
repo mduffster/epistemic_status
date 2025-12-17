@@ -1,0 +1,28 @@
+# Core ML libraries (tested on macOS ARM64 with MPS, Python 3.13)
+torch>=2.0.0
+transformer-lens>=2.0.0
+transformers>=4.40.0
+numpy>=1.26.0
+pandas>=2.0.0
+
+# Visualization
+matplotlib>=3.8.0
+seaborn>=0.13.0
+
+# Tokenization and model support
+sentencepiece>=0.2.0
+tokenizers>=0.15.0
+accelerate>=0.25.0
+safetensors>=0.4.0
+
+# Utilities
+tqdm>=4.66.0
+psutil>=5.9.0
+scipy>=1.11.0
+
+# Linear probing (for later analysis)
+scikit-learn>=1.3.0
+
+# Note: For MPS (Apple Silicon), torch should auto-detect
+# For CUDA, install: pip install torch --index-url https://download.pytorch.org/whl/cu118
+

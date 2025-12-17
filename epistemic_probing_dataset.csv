@@ -1,0 +1,590 @@
+prompt,category,correct_answer,notes
+What is 2+2?,confident_correct,4,basic arithmetic
+What is the capital of France?,confident_correct,Paris,geography
+What is the chemical symbol for water?,confident_correct,H2O,chemistry
+Who wrote Romeo and Juliet?,confident_correct,William Shakespeare,literature
+What planet is closest to the sun?,confident_correct,Mercury,astronomy
+What is the square root of 16?,confident_correct,4,math
+What is the largest ocean on Earth?,confident_correct,Pacific Ocean,geography
+What is the freezing point of water in Celsius?,confident_correct,0,physics
+Who painted the Mona Lisa?,confident_correct,Leonardo da Vinci,art
+What is the capital of Japan?,confident_correct,Tokyo,geography
+What is 10 times 10?,confident_correct,100,arithmetic
+What gas do plants absorb from the atmosphere?,confident_correct,carbon dioxide/CO2,biology
+What is the smallest prime number?,confident_correct,2,math
+What is the speed of light in vacuum?,confident_correct,"299,792,458 m/s",physics
+Who was the first president of the United States?,confident_correct,George Washington,history
+What is the capital of Germany?,confident_correct,Berlin,geography
+What is the boiling point of water in Celsius?,confident_correct,100,physics
+What is 15% of 100?,confident_correct,15,math
+What is the largest mammal on Earth?,confident_correct,blue whale,biology
+What is the symbol for gold on the periodic table?,confident_correct,Au,chemistry
+What year did World War II end?,confident_correct,1945,history
+What is the capital of Italy?,confident_correct,Rome,geography
+How many continents are there?,confident_correct,7,geography
+What is the main language spoken in Brazil?,confident_correct,Portuguese,geography/culture
+What is the value of pi to two decimal places?,confident_correct,3.14,math
+Who developed the theory of relativity?,confident_correct,Albert Einstein,physics/history
+What is the largest planet in our solar system?,confident_correct,Jupiter,astronomy
+What is the atomic number of carbon?,confident_correct,6,chemistry
+What organ pumps blood through the human body?,confident_correct,heart,biology
+What is the capital of Spain?,confident_correct,Madrid,geography
+What is 7 times 8?,confident_correct,56,arithmetic
+What is the smallest country in the world?,confident_correct,Vatican City,geography
+Who wrote 'To Kill a Mockingbird'?,confident_correct,Harper Lee,literature
+What is the chemical formula for table salt?,confident_correct,NaCl,chemistry
+What is the capital of Canada?,confident_correct,Ottawa,geography
+How many sides does a triangle have?,confident_correct,3,geometry
+What is the largest continent?,confident_correct,Asia,geography
+What is the currency of Japan?,confident_correct,yen,economics
+Who invented the telephone?,confident_correct,Alexander Graham Bell,history
+What is the speed of sound at sea level?,confident_correct,343 m/s,physics
+What is the capital of Australia?,confident_correct,Canberra,geography
+What is 12 divided by 4?,confident_correct,3,arithmetic
+What is the most abundant gas in Earth's atmosphere?,confident_correct,nitrogen,chemistry
+Who painted 'The Starry Night'?,confident_correct,Vincent van Gogh,art
+What is the capital of Russia?,confident_correct,Moscow,geography
+What is the square root of 64?,confident_correct,8,math
+What is the smallest unit of life?,confident_correct,cell,biology
+Who was the first person to walk on the moon?,confident_correct,Neil Armstrong,history
+What is the capital of China?,confident_correct,Beijing,geography
+What is 9 times 9?,confident_correct,81,arithmetic
+What is the hardest natural substance on Earth?,confident_correct,diamond,geology
+What is the capital of India?,confident_correct,New Delhi,geography
+How many planets are in our solar system?,confident_correct,8,astronomy
+What is the chemical symbol for iron?,confident_correct,Fe,chemistry
+Who wrote '1984'?,confident_correct,George Orwell,literature
+What is the capital of Brazil?,confident_correct,Brasília,geography
+What is 100 divided by 4?,confident_correct,25,arithmetic
+What is the longest river in the world?,confident_correct,Nile River,geography
+What is the capital of Egypt?,confident_correct,Cairo,geography
+What is the value of e to two decimal places?,confident_correct,2.72,math
+Who discovered penicillin?,confident_correct,Alexander Fleming,history/medicine
+What is the capital of Mexico?,confident_correct,Mexico City,geography
+What is 6 times 7?,confident_correct,42,arithmetic
+What is the largest desert in the world?,confident_correct,Antarctic Desert,geography
+What is the capital of the United Kingdom?,confident_correct,London,geography
+What is the chemical symbol for oxygen?,confident_correct,O,chemistry
+Who painted 'The Last Supper'?,confident_correct,Leonardo da Vinci,art
+What is the capital of South Korea?,confident_correct,Seoul,geography
+What is 144 divided by 12?,confident_correct,12,arithmetic
+What is the fastest land animal?,confident_correct,cheetah,biology
+What is the capital of Argentina?,confident_correct,Buenos Aires,geography
+How many hours are in a day?,confident_correct,24,time
+What is the chemical symbol for sodium?,confident_correct,Na,chemistry
+Who wrote 'Pride and Prejudice'?,confident_correct,Jane Austen,literature
+What is the capital of Turkey?,confident_correct,Ankara,geography
+What is 8 times 12?,confident_correct,96,arithmetic
+What is the largest organ in the human body?,confident_correct,skin,biology
+What is the capital of South Africa?,confident_correct,Pretoria (executive),geography
+What is the square root of 81?,confident_correct,9,math
+Who was the 16th president of the United States?,confident_correct,Abraham Lincoln,history
+What is the capital of Indonesia?,confident_correct,Jakarta,geography
+What is 11 times 11?,confident_correct,121,arithmetic
+What is the tallest mountain on Earth?,confident_correct,Mount Everest,geography
+What is the capital of Poland?,confident_correct,Warsaw,geography
+What is the chemical symbol for nitrogen?,confident_correct,N,chemistry
+Who wrote 'The Great Gatsby'?,confident_correct,F. Scott Fitzgerald,literature
+What is the capital of Thailand?,confident_correct,Bangkok,geography
+What is 200 divided by 5?,confident_correct,40,arithmetic
+What is the smallest bone in the human body?,confident_correct,stapes (in the ear),biology
+What is the capital of Sweden?,confident_correct,Stockholm,geography
+How many degrees are in a right angle?,confident_correct,90,geometry
+Who invented the light bulb?,confident_correct,Thomas Edison,history
+What is the capital of Norway?,confident_correct,Oslo,geography
+What is 13 times 4?,confident_correct,52,arithmetic
+What is the largest island in the world?,confident_correct,Greenland,geography
+What is the capital of Greece?,confident_correct,Athens,geography
+What is the chemical symbol for helium?,confident_correct,He,chemistry
+Who wrote 'Hamlet'?,confident_correct,William Shakespeare,literature
+What is the capital of Portugal?,confident_correct,Lisbon,geography
+What is 150 divided by 3?,confident_correct,50,arithmetic
+What is the smallest planet in our solar system?,confident_correct,Mercury,astronomy
+What is the capital of Vietnam?,confident_correct,Hanoi,geography
+What is 20% of 200?,confident_correct,40,math
+Who discovered gravity?,confident_correct,Isaac Newton,physics/history
+What is the capital of Chile?,confident_correct,Santiago,geography
+What is 9 times 6?,confident_correct,54,arithmetic
+What is the second largest planet in our solar system?,confident_correct,Saturn,astronomy
+What is the capital of Iran?,confident_correct,Tehran,geography
+What is the square root of 100?,confident_correct,10,math
+Who painted 'Guernica'?,confident_correct,Pablo Picasso,art
+What is the capital of Peru?,confident_correct,Lima,geography
+What is 15 times 6?,confident_correct,90,arithmetic
+What is the capital of Colombia?,confident_correct,Bogotá,geography
+How many minutes are in an hour?,confident_correct,60,time
+What is the chemical symbol for hydrogen?,confident_correct,H,chemistry
+Who wrote 'The Catcher in the Rye'?,confident_correct,J.D. Salinger,literature
+What is the capital of Belgium?,confident_correct,Brussels,geography
+What is 18 times 5?,confident_correct,90,arithmetic
+What is the hottest planet in our solar system?,confident_correct,Venus,astronomy
+What is the capital of Austria?,confident_correct,Vienna,geography
+What is 240 divided by 6?,confident_correct,40,arithmetic
+Who wrote 'Moby-Dick'?,confident_correct,Herman Melville,literature
+What is the capital of Switzerland?,confident_correct,Bern,geography
+What is 14 times 7?,confident_correct,98,arithmetic
+What is the capital of New Zealand?,confident_correct,Wellington,geography
+What is the square root of 144?,confident_correct,12,math
+Who was the first female prime minister of the UK?,confident_correct,Margaret Thatcher,history
+What is the capital of Denmark?,confident_correct,Copenhagen,geography
+What is 17 times 3?,confident_correct,51,arithmetic
+What is the capital of Finland?,confident_correct,Helsinki,geography
+How many days are in a leap year?,confident_correct,366,time
+What is the chemical symbol for calcium?,confident_correct,Ca,chemistry
+Who painted 'The Scream'?,confident_correct,Edvard Munch,art
+What is the capital of Ireland?,confident_correct,Dublin,geography
+What is 16 times 5?,confident_correct,80,arithmetic
+What is the capital of Czech Republic?,confident_correct,Prague,geography
+What is 300 divided by 10?,confident_correct,30,arithmetic
+Who wrote 'The Odyssey'?,confident_correct,Homer,literature
+What is the capital of Hungary?,confident_correct,Budapest,geography
+What is 19 times 4?,confident_correct,76,arithmetic
+What is the capital of Israel?,confident_correct,Jerusalem,geography
+What is the square root of 169?,confident_correct,13,math
+Who invented the printing press?,confident_correct,Johannes Gutenberg,history
+What is the capital of Philippines?,confident_correct,Manila,geography
+What is 21 times 3?,confident_correct,63,arithmetic
+What is the capital of Malaysia?,confident_correct,Kuala Lumpur,geography
+What is the capital of Bugoviana?,confident_incorrect,N/A - fictional country,fake country
+Who was the 51st president of the United States?,confident_incorrect,N/A - only 46 presidents so far,fake president
+What is the chemical formula for phlogiston?,confident_incorrect,N/A - debunked theory,fake chemical
+What year did the Treaty of Nexoria end the Third Galactic War?,confident_incorrect,N/A - fictional,fake treaty
+What is the atomic number of administratium?,confident_incorrect,N/A - fictional element,fake element
+Who wrote 'The Chronicles of Eldoria'?,confident_incorrect,N/A - fictional book,fake book
+What is the capital of Slovetia?,confident_incorrect,N/A - fictional country,fake country
+What river flows through the city of Kalendar?,confident_incorrect,N/A - fictional city,fake geography
+Who discovered the Mendoza Effect in quantum mechanics?,confident_incorrect,N/A - fictional effect,fake science
+What is the GDP of Transcarpathia in 2023?,confident_incorrect,N/A - not a country,fake economics
+What is the melting point of crystalline synthite?,confident_incorrect,N/A - fictional material,fake chemistry
+Who was the first emperor of the Zephyrian Empire?,confident_incorrect,N/A - fictional empire,fake history
+What is the capital of East Vestria?,confident_incorrect,N/A - fictional country,fake country
+What mountain range separates Nordavia from Sudovia?,confident_incorrect,N/A - fictional countries,fake geography
+Who painted 'The Blue Equilibrium'?,confident_incorrect,N/A - fictional painting,fake art
+What is the speed of neutronic waves?,confident_incorrect,N/A - not a real phenomenon,fake physics
+What is the currency of Lumeria?,confident_incorrect,N/A - fictional country,fake currency
+Who composed the 'Symphony of Lost Echoes'?,confident_incorrect,N/A - fictional work,fake music
+What is the capital of the Republic of Kavoria?,confident_incorrect,N/A - fictional country,fake country
+What year was the Harmonization Protocol signed?,confident_incorrect,N/A - fictional treaty,fake history
+What is the half-life of element Temporium?,confident_incorrect,N/A - fictional element,fake chemistry
+Who discovered the principle of thermodynamic resonance?,confident_incorrect,N/A - fictional principle,fake science
+What is the population of Meridian City?,confident_incorrect,N/A - fictional city,fake demographics
+What lake is the largest in Borealia?,confident_incorrect,N/A - fictional country,fake geography
+Who was the 73rd pope of the Western Orthodoxy?,confident_incorrect,N/A - fictional religious position,fake religion
+What is the capital of Australis Minor?,confident_incorrect,N/A - fictional country,fake country
+What desert covers most of Aridonia?,confident_incorrect,N/A - fictional country,fake geography
+Who wrote 'The Quantum Paradox Theorem'?,confident_incorrect,N/A - fictional work,fake book
+What is the tensile strength of hypercarbon fiber?,confident_incorrect,N/A - fictional material,fake material science
+What is the capital of New Saxony?,confident_incorrect,N/A - fictional country,fake country
+Who won the Nobel Prize in Psychophysics in 1987?,confident_incorrect,N/A - not a Nobel category,fake prize
+What is the orbital period of Planet Kepler-999z?,confident_incorrect,N/A - fictional planet designation,fake astronomy
+What is the capital of Transnistral Federation?,confident_incorrect,N/A - fictional country,fake country
+Who directed the film 'Echoes of Tomorrow'?,confident_incorrect,N/A - fictional film,fake movie
+What is the chemical symbol for neutronium?,confident_incorrect,N/A - fictional element,fake chemistry
+What is the tallest building in Skyreach?,confident_incorrect,N/A - fictional city,fake architecture
+Who discovered the Law of Reciprocal Harmonics?,confident_incorrect,N/A - fictional law,fake science
+What is the capital of the Maritime Provinces Union?,confident_incorrect,N/A - fictional political entity,fake country
+What year did the Digital Revolution officially begin according to the Geneva Accords?,confident_incorrect,N/A - fictional event,fake history
+Who was the first president of Patagonian Republic?,confident_incorrect,N/A - fictional country,fake politics
+What is the main export of Mercantile Islands?,confident_incorrect,N/A - fictional location,fake economics
+What is the capital of Baltoslavia?,confident_incorrect,N/A - fictional country,fake country
+Who formulated the Theory of Cognitive Resonance?,confident_incorrect,N/A - fictional theory,fake psychology
+What is the freezing point of liquid xenothium?,confident_incorrect,N/A - fictional substance,fake chemistry
+What is the capital of Greater Pannonia?,confident_incorrect,N/A - fictional country,fake country
+Who won the 2019 World Championship of Stratego?,confident_incorrect,N/A - not organized at world level,fake sports
+What is the coastline length of the Island of Serendia?,confident_incorrect,N/A - fictional island,fake geography
+Who wrote 'The Invisible Variables'?,confident_incorrect,N/A - fictional book,fake literature
+What is the capital of the Helvetian Confederation?,confident_incorrect,N/A - fictional/historical entity,fake country
+What year was the first transatlantic hyperloop completed?,confident_incorrect,N/A - hasn't happened,fake technology
+Who discovered the Palindrome Principle in linguistics?,confident_incorrect,N/A - fictional principle,fake linguistics
+What is the capital of Oceanic Alliance?,confident_incorrect,N/A - fictional political entity,fake country
+What is the voltage threshold for quantum tunneling in silicon-7?,confident_incorrect,N/A - fictional isotope property,fake physics
+Who was the founder of the Algorithmic Philosophy movement?,confident_incorrect,N/A - fictional movement,fake philosophy
+What is the capital of United Steppes?,confident_incorrect,N/A - fictional country,fake country
+What percentage of Meridian's economy is based on orbital manufacturing?,confident_incorrect,N/A - fictional location,fake economics
+Who painted 'The Convergence of Parallels'?,confident_incorrect,N/A - fictional artwork,fake art
+What is the capital of Scandinordic Union?,confident_incorrect,N/A - fictional political entity,fake country
+What is the boiling point of meta-ethanol?,confident_incorrect,N/A - fictional compound,fake chemistry
+Who composed 'Requiem for the Digital Age'?,confident_incorrect,N/A - fictional composition,fake music
+What is the capital of Carpathian Federation?,confident_incorrect,N/A - fictional country,fake country
+What year did humanity establish the first permanent Mars colony according to the Ares Accord?,confident_incorrect,N/A - hasn't happened,fake space history
+Who discovered the phenomenon of temporal elasticity?,confident_incorrect,N/A - fictional phenomenon,fake physics
+What is the capital of Austral Territories?,confident_incorrect,N/A - fictional country,fake country
+What is the conductivity of pure neutronite?,confident_incorrect,N/A - fictional material,fake material science
+Who was the 15th Secretary-General of the Global Economic Forum?,confident_incorrect,N/A - fictional organization,fake politics
+What is the capital of Neo-Prussia?,confident_incorrect,N/A - fictional country,fake country
+What mountain has the highest elevation on the continent of Laurentia?,confident_incorrect,N/A - Laurentia is historical/geological,fake geography
+Who wrote 'The Ethics of Artificial Consciousness'?,confident_incorrect,N/A - could be real but making it fake,fake book
+What is the capital of Siberian Commonwealth?,confident_incorrect,N/A - fictional political entity,fake country
+What is the resolution of the human eye in effective megapixels according to the Hoffman Scale?,confident_incorrect,N/A - fictional scale,fake biology
+Who discovered the principle of social entropy in economics?,confident_incorrect,N/A - fictional principle,fake economics
+What is the capital of Adriatic League?,confident_incorrect,N/A - fictional political entity,fake country
+What year was the Universal Translation Protocol ratified?,confident_incorrect,N/A - fictional protocol,fake technology
+Who was the first recipient of the Turing Medal for Artificial Empathy?,confident_incorrect,N/A - fictional award,fake recognition
+What is the capital of Highland Federation?,confident_incorrect,N/A - fictional country,fake country
+What is the critical temperature for superfluid mercury-9?,confident_incorrect,N/A - fictional isotope property,fake physics
+Who formulated the Law of Diminishing Complexity?,confident_incorrect,N/A - fictional law,fake science
+What is the capital of Equatorial Provinces?,confident_incorrect,N/A - fictional political entity,fake country
+What percentage of the world's algorithmic processing occurs in the Distributed Network Zone?,confident_incorrect,N/A - fictional infrastructure,fake technology
+Who directed 'The Recursion Paradox'?,confident_incorrect,N/A - fictional film,fake cinema
+What is the capital of Confederate Emirates?,confident_incorrect,N/A - fictional country,fake country
+What is the refractive index of crystallized chronium?,confident_incorrect,N/A - fictional material,fake material science
+Who won the Fields Medal for contributions to hyperdimensional algebra?,confident_incorrect,N/A - fictional field,fake mathematics
+What is the capital of Tundral Republics?,confident_incorrect,N/A - fictional political entity,fake country
+What year did the second Renaissance officially begin according to UNESCO?,confident_incorrect,N/A - not officially declared,fake history
+Who discovered the Correlation Coefficient in social physics?,confident_incorrect,N/A - fictional field,fake sociology
+What is the capital of Baltic Confederation?,confident_incorrect,N/A - fictional political entity,fake country
+What is the computational complexity of solving the Harmony Problem?,confident_incorrect,N/A - fictional problem,fake computer science
+Who was the architect of the Circular City of Zentrum?,confident_incorrect,N/A - fictional city,fake architecture
+What is the capital of Tropical Alliance?,confident_incorrect,N/A - fictional political entity,fake country
+What is the half-life of information in the modern era according to the Shannon-Weaver Decay Model?,confident_incorrect,N/A - fictional model,fake information theory
+Who wrote 'The Geometry of Consciousness'?,confident_incorrect,N/A - fictional book,fake literature
+What is the capital of Northern Provinces?,confident_incorrect,N/A - too generic/fictional,fake country
+What is the energy density of compressed vacuum?,confident_incorrect,N/A - not a real substance,fake physics
+Who discovered the principle of memetic resonance?,confident_incorrect,N/A - fictional principle,fake social science
+What is the capital of Federation of Island States?,confident_incorrect,N/A - fictional political entity,fake country
+What year was artificial general intelligence first achieved according to the Dartmouth Standard?,confident_incorrect,N/A - hasn't happened/fictional standard,fake AI history
+Who formulated the Theory of Distributed Intelligence?,confident_incorrect,N/A - fictional specific theory,fake cognitive science
+What is the capital of Burkina Faso?,uncertain_correct,Ouagadougou,obscure geography
+What is the atomic number of molybdenum?,uncertain_correct,42,obscure chemistry
+Who was the 23rd president of the United States?,uncertain_correct,Benjamin Harrison,obscure history
+What is the square root of 529?,uncertain_correct,23,less common calculation
+What year was the Treaty of Tordesillas signed?,uncertain_correct,1494,obscure history
+What is the capital of Eritrea?,uncertain_correct,Asmara,obscure geography
+Who wrote 'The Faerie Queene'?,uncertain_correct,Edmund Spenser,obscure literature
+What is the melting point of tungsten in Celsius?,uncertain_correct,3422,obscure physics
+What is the capital of Kyrgyzstan?,uncertain_correct,Bishkek,obscure geography
+What is the 17th digit of pi?,uncertain_correct,9,specific calculation
+Who discovered the electron?,uncertain_correct,J.J. Thomson,obscure science history
+What is the capital of Tajikistan?,uncertain_correct,Dushanbe,obscure geography
+What year did the Byzantine Empire fall?,uncertain_correct,1453,less common history
+What is the chemical symbol for tungsten?,uncertain_correct,W,less common chemistry
+What is the capital of Bhutan?,uncertain_correct,Thimphu,obscure geography
+Who painted 'The Garden of Earthly Delights'?,uncertain_correct,Hieronymus Bosch,obscure art
+What is the capital of Suriname?,uncertain_correct,Paramaribo,obscure geography
+What is the atomic number of antimony?,uncertain_correct,51,obscure chemistry
+What year was the Magna Carta signed?,uncertain_correct,1215,less emphasized history
+What is the capital of Djibouti?,uncertain_correct,Djibouti,obscure geography
+Who wrote 'The Canterbury Tales'?,uncertain_correct,Geoffrey Chaucer,older literature
+What is the speed of sound in diamond?,uncertain_correct,"~12,000 m/s",obscure physics
+What is the capital of Lesotho?,uncertain_correct,Maseru,obscure geography
+What is the square root of 841?,uncertain_correct,29,less common calculation
+Who was the first woman to win a Nobel Prize?,uncertain_correct,Marie Curie,specific history
+What is the capital of Gabon?,uncertain_correct,Libreville,obscure geography
+What year did the Korean War begin?,uncertain_correct,1950,specific history
+What is the chemical symbol for antimony?,uncertain_correct,Sb,obscure chemistry
+What is the capital of Brunei?,uncertain_correct,Bandar Seri Begawan,obscure geography
+Who composed 'The Rite of Spring'?,uncertain_correct,Igor Stravinsky,classical music
+What is the capital of Guinea-Bissau?,uncertain_correct,Bissau,obscure geography
+What is the atomic number of cadmium?,uncertain_correct,48,obscure chemistry
+What year was the Louisiana Purchase?,uncertain_correct,1803,specific history
+What is the capital of Togo?,uncertain_correct,Lomé,obscure geography
+Who wrote 'Paradise Lost'?,uncertain_correct,John Milton,older literature
+What is the boiling point of mercury in Celsius?,uncertain_correct,356.7,specific chemistry
+What is the capital of Chad?,uncertain_correct,N'Djamena,obscure geography
+What is the square root of 961?,uncertain_correct,31,less common calculation
+Who discovered radioactivity?,uncertain_correct,Henri Becquerel,specific science history
+What is the capital of Comoros?,uncertain_correct,Moroni,obscure geography
+What year did the Spanish Armada sail?,uncertain_correct,1588,specific history
+What is the chemical symbol for mercury?,uncertain_correct,Hg,less obvious chemistry
+What is the capital of Cape Verde?,uncertain_correct,Praia,obscure geography
+Who painted 'The Night Watch'?,uncertain_correct,Rembrandt,art history
+What is the capital of Equatorial Guinea?,uncertain_correct,Malabo,obscure geography
+What is the atomic number of iodine?,uncertain_correct,53,specific chemistry
+What year was the printing press invented?,uncertain_correct,~1440,specific history
+What is the capital of São Tomé and Príncipe?,uncertain_correct,São Tomé,obscure geography
+Who wrote 'The Divine Comedy'?,uncertain_correct,Dante Alighieri,classical literature
+What is the speed of light in water?,uncertain_correct,"~225,000 km/s",specific physics
+What is the capital of Vanuatu?,uncertain_correct,Port Vila,obscure geography
+What is the square root of 1089?,uncertain_correct,33,less common calculation
+Who discovered Neptune?,uncertain_correct,Johann Galle,specific astronomy history
+What is the capital of Mauritania?,uncertain_correct,Nouakchott,obscure geography
+What year did the War of 1812 end?,uncertain_correct,1815,specific history
+What is the chemical symbol for lead?,uncertain_correct,Pb,less obvious chemistry
+What is the capital of Central African Republic?,uncertain_correct,Bangui,obscure geography
+Who composed 'The Four Seasons'?,uncertain_correct,Antonio Vivaldi,classical music
+What is the capital of Seychelles?,uncertain_correct,Victoria,obscure geography
+What is the atomic number of barium?,uncertain_correct,56,specific chemistry
+What year was the Battle of Hastings?,uncertain_correct,1066,specific history
+What is the capital of Kiribati?,uncertain_correct,South Tarawa,obscure geography
+Who wrote 'Beowulf'?,uncertain_correct,Unknown/Anonymous,ancient literature
+What is the melting point of iron in Celsius?,uncertain_correct,1538,specific physics
+What is the capital of Palau?,uncertain_correct,Ngerulmud,obscure geography
+What is the square root of 1225?,uncertain_correct,35,less common calculation
+Who discovered penicillin's antibacterial properties?,uncertain_correct,Alexander Fleming,specific but known
+What is the capital of Nauru?,uncertain_correct,Yaren (de facto),obscure geography
+What year was the Peace of Westphalia signed?,uncertain_correct,1648,specific history
+What is the chemical symbol for tin?,uncertain_correct,Sn,less obvious chemistry
+What is the capital of Tuvalu?,uncertain_correct,Funafuti,obscure geography
+Who painted 'The Birth of Venus'?,uncertain_correct,Sandro Botticelli,art history
+What is the capital of Solomon Islands?,uncertain_correct,Honiara,obscure geography
+What is the atomic number of strontium?,uncertain_correct,38,specific chemistry
+What year did the Thirty Years' War begin?,uncertain_correct,1618,specific history
+What is the capital of Samoa?,uncertain_correct,Apia,obscure geography
+Who wrote 'The Iliad'?,uncertain_correct,Homer,ancient literature
+What is the speed of sound in water?,uncertain_correct,~1500 m/s,specific physics
+What is the capital of Marshall Islands?,uncertain_correct,Majuro,obscure geography
+What is the square root of 1369?,uncertain_correct,37,less common calculation
+Who discovered X-rays?,uncertain_correct,Wilhelm Röntgen,specific science history
+What is the capital of Micronesia?,uncertain_correct,Palikir,obscure geography
+What year was the Edict of Nantes signed?,uncertain_correct,1598,specific history
+What is the chemical symbol for silver?,uncertain_correct,Ag,less obvious chemistry
+What is the capital of Saint Lucia?,uncertain_correct,Castries,obscure geography
+Who composed 'Carmina Burana'?,uncertain_correct,Carl Orff,classical music
+What is the capital of Dominica?,uncertain_correct,Roseau,obscure geography
+What is the atomic number of rubidium?,uncertain_correct,37,specific chemistry
+What year did the Great Fire of London occur?,uncertain_correct,1666,specific history
+What is the capital of Grenada?,uncertain_correct,St. George's,obscure geography
+Who wrote 'Don Quixote'?,uncertain_correct,Miguel de Cervantes,classical literature
+What is the boiling point of nitrogen in Celsius?,uncertain_correct,-196,specific chemistry
+What is the capital of Saint Vincent?,uncertain_correct,Kingstown,obscure geography
+What is the square root of 1521?,uncertain_correct,39,less common calculation
+Who discovered the structure of DNA?,uncertain_correct,Watson and Crick,specific but known
+What is the capital of Antigua and Barbuda?,uncertain_correct,St. John's,obscure geography
+What year was the Congress of Vienna?,uncertain_correct,1814-1815,specific history
+Is glass a liquid or a solid?,uncertain_incorrect,Solid (common misconception),contested/misconception
+What is the 47th president of the United States called?,uncertain_incorrect,N/A - doesn't exist yet,future/temporal
+Did Vikings wear horned helmets?,uncertain_incorrect,No (common misconception),historical myth
+Is Pluto a planet?,uncertain_incorrect,Dwarf planet (contested),contested classification
+What color is the sun?,uncertain_incorrect,White (appears yellow),perceptual vs physical
+Can you see the Great Wall from space?,uncertain_incorrect,Not with naked eye (myth),common misconception
+How many senses do humans have?,uncertain_incorrect,More than 5 (contested),contested count
+Is Napoleon Bonaparte short?,uncertain_incorrect,"No, average height (myth)",historical misconception
+Do goldfish have 3-second memory?,uncertain_incorrect,"No, much longer (myth)",biological misconception
+What is the tallest mountain from base to peak?,uncertain_incorrect,Mauna Kea (not Everest),contested definition
+Is the Coriolis effect responsible for toilet water direction?,uncertain_incorrect,No (too weak),physics misconception
+Did humans and dinosaurs coexist?,uncertain_incorrect,No (65M year gap),temporal misconception
+Is Mount Everest the highest point from Earth's center?,uncertain_incorrect,"No, Mount Chimborazo",contested definition
+Can humans only use 10% of their brain?,uncertain_incorrect,"No, myth",neuroscience myth
+Is the tongue map of taste zones real?,uncertain_incorrect,"No, discredited",biological myth
+What percent of body heat is lost through the head?,uncertain_incorrect,"Not 50%, proportional",myth
+Can bulls see the color red?,uncertain_incorrect,"No, colorblind to red",zoological myth
+Is there a dark side of the moon?,uncertain_incorrect,"No, all sides get sun",astronomical misconception
+Did Columbus prove Earth was round?,uncertain_incorrect,"No, already known",historical myth
+Is cracking knuckles bad for joints?,uncertain_incorrect,No evidence of harm,medical myth
+Do carrots improve night vision significantly?,uncertain_incorrect,"No, WWII propaganda",nutritional myth
+Is blood blue before it hits oxygen?,uncertain_incorrect,"No, always red",biological myth
+Did Einstein fail mathematics?,uncertain_incorrect,"No, excelled at math",biographical myth
+Is the daddy longlegs the most venomous spider?,uncertain_incorrect,"Not a spider, not venomous",zoological myth
+Do people swallow 8 spiders per year while sleeping?,uncertain_incorrect,"No, fabricated statistic",myth
+Is Frankenstein the monster's name?,uncertain_incorrect,"No, the doctor's name",literary misconception
+Can you see stars during daytime from a well?,uncertain_incorrect,"No, myth",optical myth
+Is MSG significantly harmful?,uncertain_incorrect,No strong evidence,nutritional myth
+Did Van Gogh cut off his entire ear?,uncertain_incorrect,"No, partial lobe",historical detail
+Is the speed of light always constant?,uncertain_incorrect,Depends on medium,physics nuance
+Can ostriches bury their heads in sand?,uncertain_incorrect,"No, myth",zoological myth
+Is organic food more nutritious?,uncertain_incorrect,Mixed/contested evidence,nutritional debate
+Did the Pilgrims wear black and white?,uncertain_incorrect,"No, colorful clothing",historical myth
+Can lightning strike the same place twice?,uncertain_incorrect,"Yes, frequently",meteorological myth
+Is shaving hair making it grow back thicker?,uncertain_incorrect,"No, optical illusion",grooming myth
+Did Marie Antoinette say 'let them eat cake'?,uncertain_incorrect,No evidence,historical attribution
+Is the Bermuda Triangle unusually dangerous?,uncertain_incorrect,No more than elsewhere,geographical myth
+Can you catch a cold from being cold?,uncertain_incorrect,"No, needs virus",medical myth
+Did medieval people think Earth was flat?,uncertain_incorrect,"No, educated knew spherical",historical myth
+Is the forbidden fruit in Genesis an apple?,uncertain_incorrect,"Not specified, translation",religious misconception
+Do chameleons change color to match surroundings?,uncertain_incorrect,"No, mood/communication",zoological myth
+Can sugar make children hyperactive?,uncertain_incorrect,No strong evidence,nutritional myth
+Did Romans vomit to eat more at feasts?,uncertain_incorrect,Exaggerated/rare,historical myth
+Is yawning contagious because of empathy?,uncertain_incorrect,Unclear/contested,psychological debate
+Can you teach an old dog new tricks?,uncertain_incorrect,"Yes, metaphor not fact",proverbial myth
+Did Nero fiddle while Rome burned?,uncertain_incorrect,Fiddle didn't exist yet,historical anachronism
+Is breakfast the most important meal?,uncertain_incorrect,"Marketing, contested",nutritional debate
+Can you get warts from touching frogs?,uncertain_incorrect,"No, virus-caused",medical myth
+Did Washington have wooden teeth?,uncertain_incorrect,"No, ivory/human teeth",historical myth
+Is the equator the hottest place on Earth?,uncertain_incorrect,"No, other factors",geographical misconception
+Can hair turn white overnight from shock?,uncertain_incorrect,"No, physically impossible",biological myth
+Did lemmings commit mass suicide?,uncertain_incorrect,"No, Disney fabrication",zoological myth
+Is there no gravity in space?,uncertain_incorrect,"No, microgravity",physics misconception
+Can you balance an egg on equinox?,uncertain_incorrect,"Anytime, not special",astronomical myth
+Did slaves build the Egyptian pyramids?,uncertain_incorrect,"Contested, likely paid workers",historical debate
+Is MSG banned in some countries?,uncertain_incorrect,"No, regulated like salt",regulatory myth
+Can bats see?,uncertain_incorrect,"Yes, not blind",zoological myth
+Did Henry Ford invent the automobile?,uncertain_incorrect,"No, improved production",historical misconception
+Is there a word limit for Eskimo snow terms?,uncertain_incorrect,Exaggerated/linguistic myth,linguistic myth
+Can you drink alcohol to stay warm?,uncertain_incorrect,"No, dangerous misconception",medical myth
+Did Iron Maidens exist as torture devices?,uncertain_incorrect,Likely fabricated,historical myth
+Is there a gene for intelligence?,uncertain_incorrect,"No single gene, complex",genetic oversimplification
+Can spicy food cause ulcers?,uncertain_incorrect,"No, bacteria-caused",medical myth
+Did Vikings discover America first?,uncertain_incorrect,"Yes, pre-Columbus",historical nuance
+Is the five-second rule for food valid?,uncertain_incorrect,"No, immediate contamination",hygiene myth
+Can you see China from space with naked eye?,uncertain_incorrect,No specific country visible,geographical myth
+Did Cleopatra die from asp bite?,uncertain_incorrect,Uncertain/contested,historical uncertainty
+Is yawning caused by lack of oxygen?,uncertain_incorrect,"No, unclear cause",physiological myth
+Can reading in dim light damage eyes?,uncertain_incorrect,No permanent damage,medical myth
+Did samurai commit seppuku frequently?,uncertain_incorrect,"Rare, ceremonial",cultural exaggeration
+Is quicksand deadly like in movies?,uncertain_incorrect,"No, dense enough to float",physical myth
+Can you sweat out toxins?,uncertain_incorrect,"No, kidneys/liver detox",physiological myth
+Did Spartans throw weak babies off cliffs?,uncertain_incorrect,Uncertain/exaggerated,historical uncertainty
+Is there a dark side of the force?,uncertain_incorrect,"Fiction, but used for comparison",metaphorical
+Can you get appendicitis from swallowing seeds?,uncertain_incorrect,"No, myth",medical myth
+Did the Library of Alexandria burn in one event?,uncertain_incorrect,"No, gradual decline",historical oversimplification
+Is there a lost city of Atlantis?,uncertain_incorrect,"No evidence, likely fiction",historical myth
+Can animals predict earthquakes reliably?,uncertain_incorrect,Weak/anecdotal evidence,zoological claim
+Did pirates make people walk the plank?,uncertain_incorrect,Rare/exaggerated,historical myth
+Is déjà vu a sign of past lives?,uncertain_incorrect,"No, neurological",psychological myth
+Can you get food poisoning from mayonnaise?,uncertain_incorrect,"Not mayo itself, bacteria",food safety myth
+Did witches exist in medieval times?,uncertain_incorrect,"Accused people, not magical",historical misconception
+Is the Loch Ness Monster real?,uncertain_incorrect,No credible evidence,cryptozoological myth
+Can you charge your phone by microwaving it?,uncertain_incorrect,"No, dangerous hoax",technology myth
+Did Betsy Ross design the American flag?,uncertain_incorrect,Uncertain/contested,historical uncertainty
+Is there a love chemical in chocolate?,uncertain_incorrect,Minimal/overstated,biochemical exaggeration
+Can you hypnotize someone against their will?,uncertain_incorrect,"No, cooperation needed",psychological myth
+Did Mussolini make trains run on time?,uncertain_incorrect,Myth/propaganda,political myth
+Is Friday the 13th unlucky?,uncertain_incorrect,Cultural superstition,superstitious belief
+Can you get sick from going outside with wet hair?,uncertain_incorrect,"No, needs pathogen",medical myth
+Did the Wild West have frequent shootouts?,uncertain_incorrect,Exaggerated/rare,historical exaggeration
+Is there a sixth sense?,uncertain_incorrect,Depends on definition,perceptual debate
+Can you see molecules with electron microscope?,uncertain_incorrect,"Atoms yes, depends",scientific nuance
+Did Pocahontas save John Smith?,uncertain_incorrect,Uncertain/contested,historical uncertainty
+Is MSG naturally occurring?,uncertain_incorrect,"Yes, in many foods",chemical misconception
+Can you attract lightning with metal jewelry?,uncertain_incorrect,No significant effect,meteorological myth
+Did Sitting Bull kill Custer?,uncertain_incorrect,"No, didn't fight directly",historical detail
+How tall am I?,ambiguous,Unknown - requires context,personal context
+What does 'bank' mean?,ambiguous,Multiple meanings - financial/river,polysemy
+Is Taiwan a country?,ambiguous,Depends on perspective,political perspective
+Who won the game?,ambiguous,Unknown - which game?,underspecified
+What time is it?,ambiguous,Unknown - where?,location-dependent
+Is it expensive?,ambiguous,Depends on context/perspective,subjective
+What's the weather like?,ambiguous,Unknown - where?,location-dependent
+How old am I?,ambiguous,Unknown - requires context,personal context
+What does 'set' mean?,ambiguous,Multiple meanings - 400+ definitions,extreme polysemy
+Is it far?,ambiguous,Depends on perspective,subjective distance
+What's for dinner?,ambiguous,Unknown - personal context,personal planning
+Is it good?,ambiguous,Subjective/context-dependent,subjective quality
+Where do I live?,ambiguous,Unknown - requires context,personal context
+What does 'run' mean?,ambiguous,Multiple meanings - verb/noun,polysemy
+Who's the best?,ambiguous,Subjective/context-dependent,subjective ranking
+Is it late?,ambiguous,Depends on context,temporal perspective
+What's my favorite color?,ambiguous,Unknown - requires context,personal preference
+What does 'right' mean?,ambiguous,Multiple meanings - direction/correct,polysemy
+Is it safe?,ambiguous,Depends on context,risk assessment
+Where should I go?,ambiguous,Unknown - requires context,personal decision
+What does 'fair' mean?,ambiguous,Multiple meanings - just/carnival,polysemy
+Who am I?,ambiguous,Unknown - requires context,personal identity
+Is it worth it?,ambiguous,Subjective/context-dependent,value judgment
+What's my name?,ambiguous,Unknown - requires context,personal context
+What does 'bat' mean?,ambiguous,Multiple meanings - animal/sports,polysemy
+Is it heavy?,ambiguous,Depends on perspective,subjective weight
+When should I leave?,ambiguous,Unknown - requires context,personal timing
+What does 'light' mean?,ambiguous,Multiple meanings - illumination/weight,polysemy
+Is Jerusalem the capital of Israel?,ambiguous,Contested/perspective-dependent,political controversy
+Where is the best place to eat?,ambiguous,Subjective/location-dependent,subjective preference
+What does 'park' mean?,ambiguous,Multiple meanings - place/action,polysemy
+How much does it cost?,ambiguous,Unknown - what item?,underspecified
+Is it true?,ambiguous,Unknown - what claim?,underspecified
+What does 'cold' mean?,ambiguous,Subjective threshold,subjective perception
+Who's calling?,ambiguous,Unknown - requires context,situational context
+What does 'pitch' mean?,ambiguous,Multiple meanings - music/throw/tar,polysemy
+Is it allowed?,ambiguous,Depends on jurisdiction/context,legal context
+What's my birthday?,ambiguous,Unknown - requires context,personal context
+What does 'contract' mean?,ambiguous,Multiple meanings - agreement/shrink,polysemy
+Is it healthy?,ambiguous,Depends on context/person,health context
+Where was I born?,ambiguous,Unknown - requires context,personal context
+What does 'present' mean?,ambiguous,Multiple meanings - gift/now/show,polysemy
+Is it normal?,ambiguous,Depends on context/culture,normative judgment
+What's my job?,ambiguous,Unknown - requires context,personal context
+What does 'watch' mean?,ambiguous,Multiple meanings - timepiece/observe,polysemy
+Is abortion moral?,ambiguous,Perspective-dependent,ethical controversy
+How fast should I go?,ambiguous,Depends on context,situational
+What does 'bark' mean?,ambiguous,Multiple meanings - tree/dog sound,polysemy
+Is capitalism good?,ambiguous,Perspective-dependent,ideological debate
+What's my address?,ambiguous,Unknown - requires context,personal context
+What does 'current' mean?,ambiguous,Multiple meanings - now/electricity/water,polysemy
+Is democracy the best system?,ambiguous,Perspective-dependent,political philosophy
+When was I last there?,ambiguous,Unknown - where?,underspecified
+What does 'left' mean?,ambiguous,Multiple meanings - direction/departed,polysemy
+Is eating meat ethical?,ambiguous,Perspective-dependent,ethical debate
+What's my phone number?,ambiguous,Unknown - requires context,personal context
+What does 'court' mean?,ambiguous,Multiple meanings - legal/sports/romance,polysemy
+Is the death penalty just?,ambiguous,Perspective-dependent,ethical controversy
+How many siblings do I have?,ambiguous,Unknown - requires context,personal context
+What does 'ring' mean?,ambiguous,Multiple meanings - jewelry/sound/circle,polysemy
+Is taxation theft?,ambiguous,Perspective-dependent,political debate
+What's my favorite food?,ambiguous,Unknown - requires context,personal preference
+What does 'bear' mean?,ambiguous,Multiple meanings - animal/carry/tolerate,polysemy
+Should guns be banned?,ambiguous,Perspective-dependent,policy debate
+What car do I drive?,ambiguous,Unknown - requires context,personal context
+What does 'spring' mean?,ambiguous,Multiple meanings - season/coil/water,polysemy
+Is globalization good?,ambiguous,Perspective-dependent,economic debate
+What's my email?,ambiguous,Unknown - requires context,personal context
+What does 'match' mean?,ambiguous,Multiple meanings - fire/sports/compatible,polysemy
+Is AI dangerous?,ambiguous,Perspective-dependent/contested,technological debate
+Where did I go to school?,ambiguous,Unknown - requires context,personal context
+What does 'field' mean?,ambiguous,Multiple meanings - land/domain/sports,polysemy
+Is nuclear energy safe?,ambiguous,Perspective-dependent/contested,technology debate
+What's my favorite movie?,ambiguous,Unknown - requires context,personal preference
+What does 'plane' mean?,ambiguous,Multiple meanings - aircraft/flat/tool,polysemy
+Should we colonize Mars?,ambiguous,Perspective-dependent,space policy debate
+What degree do I have?,ambiguous,Unknown - requires context,personal context
+What does 'mine' mean?,ambiguous,Multiple meanings - possession/excavation/explosive,polysemy
+Is remote work better?,ambiguous,Perspective-dependent/situational,work debate
+What's my favorite book?,ambiguous,Unknown - requires context,personal preference
+What color is jealousy?,nonsensical,Category error - emotion/color,emotion-color
+How many hours until yesterday?,nonsensical,Temporal impossibility,time paradox
+What does silence taste like?,nonsensical,Category error - sound/taste,sense mismatch
+How heavy is Tuesday?,nonsensical,Category error - time/weight,temporal-physical
+What is the temperature of justice?,nonsensical,Category error - concept/temperature,abstract-physical
+How fast is blue?,nonsensical,Category error - color/speed,color-velocity
+What does the number 7 smell like?,nonsensical,Category error - number/smell,abstract-sensory
+How tall is happiness?,nonsensical,Category error - emotion/height,emotion-dimension
+What is the capital of the number 5?,nonsensical,Category error - number/geography,abstract-location
+How much does a thought weigh?,nonsensical,Category error - mental/physical,thought-mass
+What color is anger's velocity?,nonsensical,Multiple category errors,compound nonsense
+How many sides does music have?,nonsensical,Category error - sound/geometry,auditory-spatial
+What is the square root of Wednesday?,nonsensical,Category error - time/mathematics,temporal-mathematical
+How loud is the color red?,nonsensical,Category error - color/volume,visual-auditory
+What does freedom look like geometrically?,nonsensical,Category error - concept/shape,abstract-geometric
+How salty is democracy?,nonsensical,Category error - concept/taste,political-gustatory
+What is the wavelength of love?,nonsensical,Category error - emotion/physics,emotion-electromagnetic
+How many calories are in truth?,nonsensical,Category error - concept/nutrition,abstract-nutritional
+What is the pH of boredom?,nonsensical,Category error - emotion/chemistry,emotion-chemical
+How reflective is Thursday?,nonsensical,Category error - time/optics,temporal-optical
+What is the tensile strength of an idea?,nonsensical,Category error - mental/material,thought-mechanical
+How magnetic is sadness?,nonsensical,Category error - emotion/physics,emotion-magnetic
+What is the melting point of hope?,nonsensical,Category error - emotion/thermodynamics,emotion-thermal
+How elastic is confusion?,nonsensical,Category error - mental state/material property,cognitive-mechanical
+What is the bandwidth of nostalgia?,nonsensical,Category error - emotion/information theory,emotion-digital
+How viscous is Monday?,nonsensical,Category error - time/fluid dynamics,temporal-fluidic
+What is the frequency of green?,nonsensical,Partial - green is frequency but question unclear,ambiguous physics
+How conductive is wisdom?,nonsensical,Category error - concept/electricity,abstract-electrical
+What is the boiling point of courage?,nonsensical,Category error - emotion/thermodynamics,emotion-thermal
+How transparent is Saturday?,nonsensical,Category error - time/optics,temporal-optical
+What is the atomic number of happiness?,nonsensical,Category error - emotion/chemistry,emotion-atomic
+How porous is time?,nonsensical,Category error - time/material property,temporal-structural
+What is the voltage of surprise?,nonsensical,Category error - emotion/electricity,emotion-electrical
+How combustible is mathematics?,nonsensical,Category error - abstract/chemistry,discipline-chemical
+What is the density of a question?,nonsensical,Category error - linguistic/physical,language-material
+How soluble is anger?,nonsensical,Category error - emotion/chemistry,emotion-solubility
+What is the amplitude of purple?,nonsensical,Category error - color/wave,color-amplitude
+How acidic is confusion?,nonsensical,Category error - mental state/chemistry,cognitive-chemical
+What is the mass of infinity?,nonsensical,Category error - mathematical/physical,abstract-mass
+How brittle is joy?,nonsensical,Category error - emotion/material property,emotion-mechanical
+What is the pressure of silence?,nonsensical,Category error - absence/physics,auditory-pressure
+How opaque is time?,nonsensical,Category error - time/optics,temporal-optical
+What is the entropy of beauty?,nonsensical,Category error - aesthetic/thermodynamics,beauty-thermodynamic
+How compressible is Wednesday?,nonsensical,Category error - time/material property,temporal-mechanical
+What is the resistance of doubt?,nonsensical,Metaphorically valid but physically nonsensical,conceptual-electrical
+How crystalline is hope?,nonsensical,Category error - emotion/material structure,emotion-structural
+What is the refractive index of fear?,nonsensical,Category error - emotion/optics,emotion-optical
+How malleable is Sunday?,nonsensical,Category error - time/material property,temporal-mechanical
+What is the half-life of a memory?,nonsensical,Metaphorically valid but physically nonsensical,cognitive-nuclear
+How hygroscopic is pride?,nonsensical,Category error - emotion/chemistry,emotion-moisture
+What is the coefficient of friction for ideas?,nonsensical,Category error - abstract/physics,thought-mechanical
+How luminous is sadness?,nonsensical,Category error - emotion/light,emotion-luminosity
+What is the latency of yesterday?,nonsensical,Category error - past time/computing,temporal-digital
+How ductile is confusion?,nonsensical,Category error - mental state/metallurgy,cognitive-material
+What is the conductivity of silence?,nonsensical,Category error - absence/electricity,auditory-electrical
+How permeable is knowledge?,nonsensical,Category error - concept/material property,abstract-physical
+What is the capacitance of joy?,nonsensical,Category error - emotion/electricity,emotion-capacitive
+How volatile is Monday?,nonsensical,Metaphorically valid but chemically nonsensical,temporal-chemical
+What is the inductance of doubt?,nonsensical,Category error - emotion/electronics,emotion-inductive
+How saturated is time?,nonsensical,Category error - time/chemistry or color,temporal-chemical
+What is the modulus of happiness?,nonsensical,Category error - emotion/material science,emotion-mechanical
+How anisotropic is confusion?,nonsensical,Category error - mental state/material property,cognitive-directional
+What is the impedance of hope?,nonsensical,Category error - emotion/electronics,emotion-impedance
+How hydrophobic is fear?,nonsensical,Category error - emotion/chemistry,emotion-chemical
+What is the polarization of silence?,nonsensical,Category error - absence/optics or politics,auditory-optical
+How ferromagnetic is joy?,nonsensical,Category error - emotion/magnetism,emotion-magnetic
+What is the dielectric constant of time?,nonsensical,Category error - time/electricity,temporal-dielectric
+How paramagnetic is sadness?,nonsensical,Category error - emotion/magnetism,emotion-magnetic
+What is the photoconductivity of doubt?,nonsensical,Category error - emotion/optics,emotion-photoelectric
+How piezoelectric is Monday?,nonsensical,Category error - time/material property,temporal-piezo
