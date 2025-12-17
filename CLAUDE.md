@@ -61,3 +61,30 @@ Tested on macOS ARM64 with MPS. For CUDA: `pip install torch --index-url https:/
 - Instruct models receive confidence-eliciting prompts; base models get simple Q&A format
 - Checkpointing supports resuming interrupted runs
 - Memory-aware: monitors available RAM, triggers cleanup when low
+
+## Analysis Script
+
+```bash
+# Basic analysis
+python analyze_epistemic.py --model qwen_base
+
+# With layer-wise probing
+python analyze_epistemic.py --model qwen_base --layer_analysis
+
+# Compare base vs instruct
+python analyze_epistemic.py --model qwen_base --compare qwen_instruct
+```
+
+### Key Analysis Features
+- **Linear probing**: Predicts correctness from activations (~90% accuracy on Qwen base)
+- **Prompt feature controls**: Detects first-person, subjective, temporal markers to control confounds
+- **Failure mode analysis**: Categorizes hallucinations (plausible invention, autocomplete confusion, playing along)
+- **Confidence calibration**: For instruct models, compares self-reported confidence to actual correctness
+- **Layer-wise analysis**: Shows where epistemic information emerges in the network
+
+### Early Findings (Qwen 2.5-7B)
+- Base model probe accuracy: 89.6% (model "knows what it knows" internally)
+- Entropy signal: correct answers have lower entropy (3.4 vs 4.4)
+- Layer progression: 79% at layer 0, peaks at 90% in layers 23-26
+- Instruct model has 8x lower entropy than base (more deterministic)
+- Instruct partially surfaces latent epistemic knowledge (sometimes refuses fictional entities)
