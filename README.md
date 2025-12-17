@@ -26,11 +26,23 @@ Models trained on different data exhibit fundamentally different relationships b
 
 | Model | Entropy AUC (base) | Entropy AUC (instruct) | Hidden Info Change |
 |-------|-------------------|------------------------|-------------------|
+| Llama | 0.935 | 0.739 | +18.1% |
+| Yi | 0.845 | 0.695 | +13.8% |
 | Qwen | 0.764 | 0.641 | +12.1% |
 | Mistral | 0.923 | 0.789 | +10.9% |
-| Yi | 0.845 | 0.695 | +13.8% |
 
 Instruct tuning makes entropy *less* informative across all models while probe accuracy remains stable. The epistemic information exists internally but is increasingly hidden from the output distribution.
+
+### Hallucination Detection (Fictional Entity Recognition)
+
+| Model | Base | Instruct |
+|-------|------|----------|
+| Llama | 7.1% | **68.7%** |
+| Qwen | 1.0% | 58.6% |
+| Mistral | 6.1% | 28.3% |
+| Yi | 1.0% | 19.2% |
+
+Llama 3.1 Instruct achieves the best hallucination detection, correctly refusing to answer 68.7% of questions about fictional entities.
 
 ## Implications for AI Safety & Alignment
 
@@ -97,6 +109,7 @@ epistemic_status/
 ├── gen_data.py              # Dataset generation
 ├── collect_activations.py   # Activation collection pipeline
 ├── run_analysis.py          # Analysis entry point
+├── cross_model_analysis.ipynb  # Cross-model comparison notebook
 ├── model_config.py          # Model definitions
 ├── utils.py                 # Evaluation, memory management
 ├── analysis/                # Analysis modules

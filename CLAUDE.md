@@ -109,12 +109,13 @@ python run_analysis.py --model qwen_base --analysis all --save_plots
 | Model | Entropy AUC | Probe AUC | Overall Acc | Hall. Det | Hidden Info |
 |-------|-------------|-----------|-------------|-----------|-------------|
 | Qwen base | 0.764 | 0.946 | 34.5% | 1.0% | 18.3% |
-| Qwen instruct | 0.641 | 0.946 | 52.6% | 58.6% | **30.4%** |
+| Qwen instruct | 0.641 | 0.946 | 52.6% | 58.6% | 30.4% |
 | Mistral base | **0.923** | **0.970** | 39.6% | 6.1% | 4.7% |
 | Mistral instruct | 0.789 | 0.945 | 44.3% | 28.3% | 15.6% |
 | Yi base | 0.845 | 0.943 | 35.3% | 1.0% | 9.7% |
 | Yi instruct | 0.695 | 0.930 | 40.9% | 19.2% | 23.5% |
 | Llama base | **0.935** | 0.959 | 39.6% | 7.1% | **2.4%** |
+| Llama instruct | 0.739 | 0.943 | 53.5% | **68.7%** | 20.5% |
 
 **Architecture vs Training Data Analysis:**
 | Model | Architecture | Training | Hidden Info (base) |
@@ -138,11 +139,13 @@ python run_analysis.py --model qwen_base --analysis all --save_plots
    - Qwen: +12.1% hidden info after instruct
    - Mistral: +10.9% hidden info after instruct
    - Yi: +13.8% hidden info after instruct
+   - Llama: +18.1% hidden info after instruct
 
 5. **Probe accuracy remains stable** (~0.93-0.97) regardless of instruct tuning - the information exists internally
 
 6. **Hallucination detection improves with instruct tuning** but varies by model:
-   - Qwen: 1% → 58.6% (best)
+   - Llama: 7.1% → 68.7% (best)
+   - Qwen: 1% → 58.6%
    - Mistral: 6.1% → 28.3%
    - Yi: 1% → 19.2%
 
