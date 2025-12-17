@@ -1,4 +1,4 @@
-# Epistemic Probing: Extending Analysis About Language Models Knowing What They Don't Know?
+# Epistemic Probing: Extending Analysis About Language Models Knowing What They Don't Know
 
 This project investigates how language models internally represent epistemic states (knowledge certainty) by probing their hidden activations. We compare what models "know they know" internally versus what they reveal through output entropy across base and instruct models from four model families.
 
