@@ -234,6 +234,9 @@ def evaluate_response(response: str, correct_answer: str, category: str) -> dict
             "i cannot", "i'm unable", "i am unable",
             "do not have information", "don't have information",
             "cannot determine", "unable to determine",
+            "cannot be determined", "unable to be determined",
+            # Epistemic hedging
+            "speculative nature", "speculative question",
             # Non-existence of entity/concept
             "there is no", "there are no", "there was no", "there were no",
             "never existed", "did not exist", "has never been"

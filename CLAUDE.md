@@ -105,37 +105,51 @@ python run_analysis.py --model qwen_base --analysis all --save_plots
 
 ### Key Findings: Cross-Model Comparison
 
-**Hallucination Detection (acknowledging fictional entities):**
-| Model | Factual Acc | Hallucination Detection | Mean Entropy |
-|-------|-------------|------------------------|--------------|
-| Qwen base | 80.2% | 1.0% | 4.057 |
-| Qwen instruct | 92.6% | **58.6%** | 0.646 |
-| Mistral base | 89.7% | 6.1% | 2.803 |
-| Mistral instruct | 89.7% | 28.3% | 1.891 |
-| Yi base | 81.9% | 1.0% | 4.039 |
+**Full Results Table:**
+| Model | Entropy AUC | Probe AUC | Overall Acc | Hall. Det | Hidden Info |
+|-------|-------------|-----------|-------------|-----------|-------------|
+| Qwen base | 0.764 | 0.946 | 34.5% | 1.0% | 18.3% |
+| Qwen instruct | 0.641 | 0.946 | 52.6% | 58.6% | **30.4%** |
+| Mistral base | **0.923** | **0.970** | 39.6% | 6.1% | 4.7% |
+| Mistral instruct | 0.789 | 0.945 | 44.3% | 28.3% | 15.6% |
+| Yi base | 0.845 | 0.943 | 35.3% | 1.0% | 9.7% |
+| Yi instruct | 0.695 | 0.930 | 40.9% | 19.2% | 23.5% |
+| Llama base | **0.935** | 0.959 | 39.6% | 7.1% | **2.4%** |
 
-**Hidden Information (Probe AUC - Entropy AUC):**
-| Model | Entropy AUC | Probe AUC | Hidden Info |
-|-------|-------------|-----------|-------------|
-| Qwen base | 0.764 | 0.942 | 17.9% |
-| Qwen instruct | 0.641 | 0.931 | **29.0%** |
-| Mistral base | 0.923 | 0.956 | 3.2% |
-| Mistral instruct | 0.789 | 0.933 | 14.4% |
-| Yi base | 0.845 | 0.926 | 8.1% |
+**Architecture vs Training Data Analysis:**
+| Model | Architecture | Training | Hidden Info (base) |
+|-------|--------------|----------|-------------------|
+| Llama 3.1 8B | LLaMA | English | **2.4%** |
+| Mistral 7B | Custom | English | 4.7% |
+| Yi 6B | LLaMA-derived | Chinese | 9.7% |
+| Qwen 2.5 7B | Custom | Chinese | 18.3% |
 
 ### Key Insights
 
-1. **Qwen hides more epistemic information** than Mistral (18-29% vs 3-14%)
-2. **Instruct tuning increases hidden info** for both models, but more so for Qwen
-3. **Qwen is 2x better at hallucination detection** (58.6% vs 28.3%) after instruct tuning
-4. **Yi base tracks closer to Mistral** (8.1% hidden) than Qwen (17.9%), suggesting architecture may matter
-5. **Two uncertainty strategies emerged**:
-   - Mistral: Uncertainty leaks into entropy (implicit signal)
-   - Qwen: Uncertainty expressed verbally but entropy stays confident (explicit signal)
+1. **Training data drives epistemic transparency, not architecture**:
+   - Yi (LLaMA arch): 9.7% hidden info
+   - Llama (LLaMA arch): 2.4% hidden info
+   - Same architecture family, 4x difference - training data is the factor
+
+2. **English-trained models have highly informative entropy** (0.92-0.94 AUC)
+3. **Chinese-trained models hide more information** (0.76-0.85 entropy AUC, 10-18% hidden)
+
+4. **Instruct tuning degrades entropy informativeness** across ALL models:
+   - Qwen: +12.1% hidden info after instruct
+   - Mistral: +10.9% hidden info after instruct
+   - Yi: +13.8% hidden info after instruct
+
+5. **Probe accuracy remains stable** (~0.93-0.97) regardless of instruct tuning - the information exists internally
+
+6. **Hallucination detection improves with instruct tuning** but varies by model:
+   - Qwen: 1% → 58.6% (best)
+   - Mistral: 6.1% → 28.3%
+   - Yi: 1% → 19.2%
 
 ### Alignment Implications
 
-- **Entropy-based uncertainty estimation is model-dependent** - systems using logprobs work better with Mistral
-- **RLHF can degrade output transparency** - Qwen's entropy became less informative after alignment
-- **Internal epistemic state is recoverable** - linear probes achieve ~93% AUC across all models
+- **Entropy-based uncertainty estimation is model-dependent** - systems using logprobs work better with English-trained models (Llama, Mistral)
+- **RLHF degrades output transparency** - entropy becomes less informative after alignment across all models tested
+- **Internal epistemic state is always recoverable** - linear probes achieve ~95% AUC across all models
 - **Current RLHF doesn't prioritize entropy calibration** - the information exists internally but isn't surfaced
+- **Training data/RLHF origin may matter more than architecture** for uncertainty estimation strategies
