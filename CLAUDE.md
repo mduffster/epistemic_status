@@ -62,29 +62,46 @@ Tested on macOS ARM64 with MPS. For CUDA: `pip install torch --index-url https:/
 - Checkpointing supports resuming interrupted runs
 - Memory-aware: monitors available RAM, triggers cleanup when low
 
-## Analysis Script
+## Analysis
 
+### Run Analysis
 ```bash
-# Basic analysis
-python analyze_epistemic.py --model qwen_base
+# Core analysis (stats, probing, entropy)
+python run_analysis.py --model qwen_base --analysis core
 
-# With layer-wise probing
-python analyze_epistemic.py --model qwen_base --layer_analysis
+# Specific analyses
+python run_analysis.py --model qwen_base --analysis effects roc
+python run_analysis.py --model qwen_base --analysis layers
 
-# Compare base vs instruct
-python analyze_epistemic.py --model qwen_base --compare qwen_instruct
+# Cross-model comparison
+python run_analysis.py --model qwen_base --compare qwen_instruct --analysis generalization
+
+# Full suite with plots
+python run_analysis.py --model qwen_base --analysis all --save_plots
 ```
 
-### Key Analysis Features
-- **Linear probing**: Predicts correctness from activations (~90% accuracy on Qwen base)
-- **Prompt feature controls**: Detects first-person, subjective, temporal markers to control confounds
-- **Failure mode analysis**: Categorizes hallucinations (plausible invention, autocomplete confusion, playing along)
-- **Confidence calibration**: For instruct models, compares self-reported confidence to actual correctness
-- **Layer-wise analysis**: Shows where epistemic information emerges in the network
+### Analysis Package Structure (`analysis/`)
+- `loader.py` - Data loading, `ModelData` class
+- `core.py` - Basic stats, failure mode analysis, prompt features
+- `probing.py` - Linear probes, layer-wise analysis, controlled probes
+- `entropy.py` - Entropy analysis, entropy vs probe comparison
+- `calibration.py` - Confidence calibration (instruct models)
+- `effects.py` - Effect sizes (Cohen's d), ROC/AUC curves
+- `comparison.py` - Cross-model generalization, bidirectional transfer
+- `plotting.py` - Visualization functions
 
-### Early Findings (Qwen 2.5-7B)
-- Base model probe accuracy: 89.6% (model "knows what it knows" internally)
-- Entropy signal: correct answers have lower entropy (3.4 vs 4.4)
-- Layer progression: 79% at layer 0, peaks at 90% in layers 23-26
-- Instruct model has 8x lower entropy than base (more deterministic)
-- Instruct partially surfaces latent epistemic knowledge (sometimes refuses fictional entities)
+### Key Analysis Features
+- **Linear probing**: Predicts correctness from activations (~90% accuracy)
+- **Effect sizes**: Cohen's d for activation differences between correct/incorrect
+- **ROC/AUC**: Compares entropy-only vs probe-based prediction
+- **Cross-model generalization**: Tests if probes transfer between base/instruct
+- **Confidence calibration**: Compares self-reported confidence to actual correctness
+- **Layer-wise analysis**: Shows where epistemic information emerges
+
+### Key Findings (Qwen 2.5-7B)
+- **Probe accuracy**: Base 89.6%, Instruct 90.0%
+- **Entropy signal**: Correct answers have lower entropy (base: 3.4 vs 4.4, instruct: 0.45 vs 0.79)
+- **Probe vs entropy**: Probe adds ~20 percentage points over entropy-only prediction
+- **Effect size**: Large effect (d=0.98) for entropy, max layer effect d=1.29 at layer 14
+- **Cross-model transfer**: Base→Instruct transfers well (89.5%), Instruct→Base fails (34%)
+- **Instruct calibration**: Poorly calibrated (reports 8-9 confidence but only 12% accurate)

@@ -6,3 +6,5 @@ __pycache__/*
 activations
 activations/*
 logs*
+analysis/__pycache__
+analysis/__pycache__/*
