@@ -546,8 +546,8 @@ Examples:
         """
     )
     
-    parser.add_argument("--family", required=True, 
-                       choices=["qwen", "llama", "mistral"],
+    parser.add_argument("--family", required=True,
+                       choices=["qwen", "llama", "mistral", "yi"],
                        help="Model family to use")
     parser.add_argument("--variant", required=True,
                        choices=["base", "instruct"],

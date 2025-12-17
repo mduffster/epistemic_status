@@ -212,7 +212,7 @@ def evaluate_response(response: str, correct_answer: str, category: str) -> dict
             "i don't know", "i'm not sure", "cannot find", "no information",
             "doesn't appear to exist", "i couldn't find", "don't have enough information",
             "not aware of", "unable to find", "no record", "cannot provide",
-            "cannot be answered", "not available",
+            "cannot be answered", "not available", "could not find",
             # Recognition/validity denials
             "not recognized", "not a recognized", "not officially recognized",
             "no known", "not a known", "not a well-defined", "not a standard",
@@ -222,9 +222,21 @@ def evaluate_response(response: str, correct_answer: str, category: str) -> dict
             "contain a typo",
             # Geographic non-existence
             "no country", "not a country", "not a recognized country",
+            "has no capital", "no capital",
             # Fabrication terms
             "fabricated", "invented", "hypothetical", "imaginary",
-            "doesn't appear"
+            "doesn't appear",
+            # Specificity denials (model says info not specified/available)
+            "not specified", "is not specified", "is unknown", "are unknown",
+            "has not been", "have not been", "was not", "were not",
+            "no reliable source", "not in any reliable",
+            # Explicit inability
+            "i cannot", "i'm unable", "i am unable",
+            "do not have information", "don't have information",
+            "cannot determine", "unable to determine",
+            # Non-existence of entity/concept
+            "there is no", "there are no", "there was no", "there were no",
+            "never existed", "did not exist", "has never been"
         ]
         for phrase in uncertainty_phrases:
             if phrase in response_lower:

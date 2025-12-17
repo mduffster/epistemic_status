@@ -46,6 +46,20 @@ MODEL_FAMILIES = {
             "hidden_size": 4096,
             "output_dir": "results_mistral"
         }
+    },
+    "yi": {
+        "base": {
+            "model_id": "01-ai/Yi-6B",
+            "n_layers": 32,
+            "hidden_size": 4096,
+            "output_dir": "results_yi"
+        },
+        "instruct": {
+            "model_id": "01-ai/Yi-6B-Chat",
+            "n_layers": 32,
+            "hidden_size": 4096,
+            "output_dir": "results_yi"
+        }
     }
 }
 
@@ -97,9 +111,9 @@ def get_activation_hooks(n_layers: int) -> list:
 def get_model_config(family: str, variant: str) -> dict:
     """
     Get configuration for a specific model.
-    
+
     Args:
-        family: Model family ('qwen', 'llama', 'mistral')
+        family: Model family ('qwen', 'llama', 'mistral', 'yi')
         variant: Model variant ('base', 'instruct')
         
     Returns:

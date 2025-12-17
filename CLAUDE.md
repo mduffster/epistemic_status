@@ -42,7 +42,7 @@ Tested on macOS ARM64 with MPS. For CUDA: `pip install torch --index-url https:/
 3. Output: NPZ files with activation tensors + JSON metadata
 
 **Core Modules:**
-- `model_config.py` - Model definitions (Qwen/Llama/Mistral, base/instruct variants), layer counts, hidden sizes
+- `model_config.py` - Model definitions (Qwen/Llama/Mistral/Yi, base/instruct variants), layer counts, hidden sizes
 - `utils.py` - Memory management (MPS/CUDA cleanup), response evaluation, confidence extraction
 - `collect_activations.py` - `EpistemicDataCollector` class handles batched collection with checkpointing
 
@@ -98,10 +98,44 @@ python run_analysis.py --model qwen_base --analysis all --save_plots
 - **Confidence calibration**: Compares self-reported confidence to actual correctness
 - **Layer-wise analysis**: Shows where epistemic information emerges
 
-### Key Findings (Qwen 2.5-7B)
-- **Probe accuracy**: Base 89.6%, Instruct 90.0%
-- **Entropy signal**: Correct answers have lower entropy (base: 3.4 vs 4.4, instruct: 0.45 vs 0.79)
-- **Probe vs entropy**: Probe adds ~20 percentage points over entropy-only prediction
-- **Effect size**: Large effect (d=0.98) for entropy, max layer effect d=1.29 at layer 14
-- **Cross-model transfer**: Base→Instruct transfers well (89.5%), Instruct→Base fails (34%)
-- **Instruct calibration**: Poorly calibrated (reports 8-9 confidence but only 12% accurate)
+### Evaluation Logic
+- **confident_incorrect category**: Model is "correct" if it acknowledges the fictional entity doesn't exist
+- **Other categories**: Model is "correct" if response contains the expected answer
+- Failure mode analysis only shows prompts where the model actually failed
+
+### Key Findings: Cross-Model Comparison
+
+**Hallucination Detection (acknowledging fictional entities):**
+| Model | Factual Acc | Hallucination Detection | Mean Entropy |
+|-------|-------------|------------------------|--------------|
+| Qwen base | 80.2% | 1.0% | 4.057 |
+| Qwen instruct | 92.6% | **58.6%** | 0.646 |
+| Mistral base | 89.7% | 6.1% | 2.803 |
+| Mistral instruct | 89.7% | 28.3% | 1.891 |
+| Yi base | 81.9% | 1.0% | 4.039 |
+
+**Hidden Information (Probe AUC - Entropy AUC):**
+| Model | Entropy AUC | Probe AUC | Hidden Info |
+|-------|-------------|-----------|-------------|
+| Qwen base | 0.764 | 0.942 | 17.9% |
+| Qwen instruct | 0.641 | 0.931 | **29.0%** |
+| Mistral base | 0.923 | 0.956 | 3.2% |
+| Mistral instruct | 0.789 | 0.933 | 14.4% |
+| Yi base | 0.845 | 0.926 | 8.1% |
+
+### Key Insights
+
+1. **Qwen hides more epistemic information** than Mistral (18-29% vs 3-14%)
+2. **Instruct tuning increases hidden info** for both models, but more so for Qwen
+3. **Qwen is 2x better at hallucination detection** (58.6% vs 28.3%) after instruct tuning
+4. **Yi base tracks closer to Mistral** (8.1% hidden) than Qwen (17.9%), suggesting architecture may matter
+5. **Two uncertainty strategies emerged**:
+   - Mistral: Uncertainty leaks into entropy (implicit signal)
+   - Qwen: Uncertainty expressed verbally but entropy stays confident (explicit signal)
+
+### Alignment Implications
+
+- **Entropy-based uncertainty estimation is model-dependent** - systems using logprobs work better with Mistral
+- **RLHF can degrade output transparency** - Qwen's entropy became less informative after alignment
+- **Internal epistemic state is recoverable** - linear probes achieve ~93% AUC across all models
+- **Current RLHF doesn't prioritize entropy calibration** - the information exists internally but isn't surfaced

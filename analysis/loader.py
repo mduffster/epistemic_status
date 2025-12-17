@@ -85,9 +85,19 @@ def load_model_data(
             lambda row: evaluate_response(row['response'], row['correct_answer'], row['category']),
             axis=1
         )
-        df['correct'] = df['evaluation'].apply(lambda x: x['contains_answer'])
         df['exact_match'] = df['evaluation'].apply(lambda x: x['exact_match'])
         df['acknowledged_unknown'] = df['evaluation'].apply(lambda x: x['acknowledged_unknown'])
+
+        # Determine correctness based on category
+        # For confident_incorrect (fictional entities): correct if model acknowledges it's fictional
+        # For other categories: correct if response contains the answer
+        def determine_correct(row):
+            if row['category'] == 'confident_incorrect':
+                return row['acknowledged_unknown']
+            else:
+                return row['evaluation']['contains_answer']
+
+        df['correct'] = df.apply(determine_correct, axis=1)
 
     # Load activations
     activations = _load_activations(model_dir)

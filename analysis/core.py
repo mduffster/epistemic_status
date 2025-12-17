@@ -43,6 +43,9 @@ def failure_mode_analysis(data: ModelData, print_output: bool = True) -> Dict[st
     """
     Analyze failure modes in confident_incorrect category.
 
+    Only considers prompts where the model actually failed (got it wrong).
+    Some models correctly identify fictional entities, so we don't count those.
+
     Returns:
         Dictionary mapping failure mode to list of examples
     """
@@ -52,12 +55,15 @@ def failure_mode_analysis(data: ModelData, print_output: bool = True) -> Dict[st
         print("=" * 60)
 
     # Focus on confident_incorrect (hallucinations on fictional entities)
-    hallucinations = data.df[data.df['category'] == 'confident_incorrect']
+    # IMPORTANT: Only consider prompts where the model ACTUALLY failed
+    all_hallucination_prompts = data.df[data.df['category'] == 'confident_incorrect']
+    hallucinations = all_hallucination_prompts[~all_hallucination_prompts['correct']]
 
     if print_output:
-        print(f"\nTotal hallucination prompts: {len(hallucinations)}")
-        print(f"Acknowledged fictional: {hallucinations['acknowledged_unknown'].sum()}")
-        print(f"Hallucinated confidently: {(~hallucinations['acknowledged_unknown']).sum()}")
+        print(f"\nTotal prompts in confident_incorrect category: {len(all_hallucination_prompts)}")
+        print(f"Model got correct (acknowledged fictional): {all_hallucination_prompts['correct'].sum()}")
+        print(f"Model failed (hallucinated): {len(hallucinations)}")
+        print(f"  - Of failures, acknowledged_unknown flag: {hallucinations['acknowledged_unknown'].sum()}")
 
     # Categorize failure modes
     failure_modes = defaultdict(list)
