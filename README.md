@@ -2,6 +2,8 @@
 
 We show that RLHF degrades the separability of epistemic states in language model activations. By probing hidden states across 8 models (4 families × base/instruct), we find that alignment training entangles "refuse to answer" representations with "genuine uncertainty," making internal epistemic states harder to distinguish despite improved behavioral performance.
 
+**Context**: Prior work established that language models represent epistemic states internally ([Kadavath et al. 2022](https://arxiv.org/abs/2207.05221), [Azaria & Mitchell 2023](https://arxiv.org/abs/2304.13734)). We extend this by showing *how RLHF alters these representations* - specifically, that alignment creates targeted entanglement where it modifies behavior.
+
 ## Key Findings
 
 ### 1. Models Hide Epistemic Information
@@ -30,30 +32,29 @@ English-trained models (Llama, Mistral) have highly informative entropy. Chinese
 
 Instruct tuning makes entropy *less* informative across all models:
 
-| Model | Entropy AUC | | Hidden Info | |
-|-------|-------------|-------------|-------------|-------------|
-| | Base | Instruct | Base | Instruct |
+| Model | Entropy (base) | Entropy (instruct) | Hidden (base) | Hidden (instruct) |
+|-------|----------------|--------------------| --------------|-------------------|
 | Llama | 0.914 | 0.734 | 3.0% | 10.5% |
 | Mistral | 0.930 | 0.741 | 1.6% | 8.2% |
 | Yi | 0.825 | 0.649 | 13.1% | 22.4% |
 | Qwen | 0.788 | 0.553 | 14.6% | 20.7% |
 
-The information exists internally but is increasingly hidden from the output distribution.
+The epistemic information exists internally but is increasingly hidden from the output distribution.
 
-### 4. RLHF Entangles "Refuse" with "Uncertain"
+### 4. Entanglement Occurs Where RLHF Applies Pressure
 
-Probe error rates increase specifically for RLHF-treated categories (hallucination refusal, ambiguity handling), while factual categories remain stable:
+The critical finding: representational degradation is *selective*. Probe error rates increase specifically for categories where RLHF modifies behavior (refusing hallucinations, acknowledging ambiguity, rejecting nonsense), while factual question categories remain stable or improve:
 
-| Model | RLHF Categories Δ | Factual Categories Δ |
-|-------|-------------------|----------------------|
-| Qwen | +0.318 | -0.068 |
-| Llama | +0.286 | -0.071 |
-| Mistral | +0.247 | +0.092 |
-| Yi | +0.220 | +0.095 |
+| Model | RLHF-Targeted Δ | Factual Δ | Selective Gap |
+|-------|-----------------|-----------|---------------|
+| Qwen | +0.318 | -0.068 | **0.386** |
+| Llama | +0.286 | -0.071 | **0.357** |
+| Mistral | +0.247 | +0.092 | **0.155** |
+| Yi | +0.220 | +0.095 | **0.125** |
 
-*Δ = change in probe error rate after instruct tuning*
+*Δ = change in probe error rate after instruct tuning. RLHF-targeted categories: `confident_incorrect` (fictional entities), `ambiguous`, `nonsensical`. Factual categories: `confident_correct`, `uncertain_correct`.*
 
-Activation similarity analysis confirms: `confident_incorrect` representations shift toward `uncertain_correct` after RLHF. The model learns to refuse hallucinations by making them "feel uncertain" internally.
+This suggests RLHF warps the representational geometry specifically at points of behavioral intervention. Activation similarity analysis confirms the mechanism: `confident_incorrect` representations shift toward `uncertain_correct` after RLHF. The model learns to refuse hallucinations by pushing those representations toward "genuine uncertainty" - entangling two epistemically distinct states.
 
 ### 5. The RLHF Paradox: Better Behavior, Worse Transparency
 
@@ -68,12 +69,13 @@ Despite internal entanglement, behavioral hallucination detection improves drama
 
 RLHF teaches models to *behave* as if they know what they don't know, while making internal representations *harder to interpret*.
 
-## Implications for AI Safety
+## Implications for Alignment & Interpretability
 
-1. **Entropy-based uncertainty is model-dependent** - logprob-based systems work better with English-trained models
-2. **RLHF degrades interpretability** - alignment training inadvertently teaches models to hide uncertainty
-3. **Internal state remains recoverable** - linear probes achieve 0.76-0.96 AUC, suggesting interpretability tools could surface hidden information
-4. **Alignment doesn't prioritize calibration** - entropy calibration may be an overlooked objective
+1. **RLHF trades interpretability for behavior** - alignment achieves better outputs by warping internal representations, not by teaching models to "truly understand" uncertainty
+2. **Entanglement is targeted** - degradation occurs specifically where RLHF intervenes, suggesting interpretability researchers should focus on alignment-modified regions
+3. **Entropy-based uncertainty is unreliable** - logprob-based uncertainty estimation works for some models but fails for others; internal probing may be necessary for robust uncertainty quantification
+4. **Internal state remains recoverable** - linear probes achieve 0.76-0.96 AUC even after RLHF, suggesting interpretability tools could surface the hidden epistemic information that alignment obscures
+5. **Calibration is not an alignment objective** - current RLHF prioritizes behavioral compliance over transparent uncertainty signaling
 
 ## Quick Start
 

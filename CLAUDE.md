@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This project investigates **epistemic states in language models** by probing internal activations. It collects model responses and hidden state activations across different epistemic categories (confident/uncertain, correct/incorrect) to analyze how models internally represent knowledge certainty.
+**RLHF Entangles Epistemic Representations in Language Models**
+
+This project shows that RLHF degrades the separability of epistemic states in language model activations. By probing hidden states across 8 models (4 families × base/instruct), we find that alignment training entangles "refuse to answer" representations with "genuine uncertainty," making internal epistemic states harder to distinguish despite improved behavioral performance.
 
 ## Key Commands
 
