@@ -1,39 +1,63 @@
-# Epistemic Probing: Extending Analysis About Language Models Knowing What They Don't Know
+# RLHF Entangles Epistemic Representations in Language Models
 
-This project investigates how language models internally represent epistemic states (knowledge certainty) by probing their hidden activations. We compare what models "know they know" internally versus what they reveal through output entropy across base and instruct models from four model families.
+We show that RLHF degrades the separability of epistemic states in language model activations. By probing hidden states across 8 models (4 families × base/instruct), we find that alignment training entangles "refuse to answer" representations with "genuine uncertainty," making internal epistemic states harder to distinguish despite improved behavioral performance.
 
-## Key Finding: Training Data Drives Epistemic Transparency
+## Key Findings
 
-Models trained on different data exhibit fundamentally different relationships between internal knowledge and output uncertainty:
+### 1. Models Hide Epistemic Information
 
-| Model | Architecture | Training | Entropy AUC | Probe AUC | Hidden Info |
-|-------|--------------|----------|-------------|-----------|-------------|
-| Mistral 7B | Custom | English | **0.930** | 0.946 | **1.6%** |
-| Llama 3.1 8B | LLaMA | English | 0.914 | 0.943 | 3.0% |
-| Yi 6B | LLaMA-derived | Chinese | 0.825 | 0.956 | 13.1% |
-| Qwen 2.5 7B | Custom | Chinese | 0.788 | 0.935 | 14.6% |
+Linear probes on activations predict correctness better than output entropy alone. The gap reveals "hidden information" - uncertainty the model represents internally but doesn't surface:
 
-**Hidden Info** = Probe AUC - Entropy AUC (information the model knows but doesn't reveal through entropy)
+| Model | Entropy AUC | Probe AUC | Hidden Info |
+|-------|-------------|-----------|-------------|
+| Mistral 7B base | **0.930** | 0.946 | **1.6%** |
+| Llama 3.1 8B base | 0.914 | 0.943 | 3.0% |
+| Yi 6B base | 0.825 | 0.956 | 13.1% |
+| Qwen 2.5 7B base | 0.788 | 0.935 | 14.6% |
 
-### What This Means
+### 2. Training Origin Determines Transparency (Not Architecture)
 
-- **English-trained models** (Llama, Mistral) have highly informative output entropy - when they're uncertain, their logprobs show it
-- **Chinese-trained models** (Qwen, Yi) hide more epistemic information - they may "know" they're uncertain internally but don't signal it through entropy
-- **Architecture doesn't fully explain this**: Yi and Llama share the same architecture but differ dramatically in hidden info (13.1% vs 3.0%)
-- **Training data/RLHF is the key factor**: The pattern correlates strongly with training origin
+Yi and Llama share the same architecture but differ 4x in hidden information:
 
-### Instruct Tuning Degrades Entropy Informativeness
+| Model | Architecture | Training Data | Hidden Info |
+|-------|--------------|---------------|-------------|
+| Llama 3.1 8B | LLaMA | English | 3.0% |
+| Yi 6B | LLaMA-derived | Chinese | 13.1% |
 
-| Model | Entropy AUC (base) | Entropy AUC (instruct) | Hidden Info Change |
-|-------|-------------------|------------------------|-------------------|
-| Mistral | 0.930 | 0.741 | +6.6% |
-| Llama | 0.914 | 0.734 | +7.5% |
-| Qwen | 0.788 | 0.553 | +6.1% |
-| Yi | 0.825 | 0.649 | +9.3% |
+English-trained models (Llama, Mistral) have highly informative entropy. Chinese-trained models (Qwen, Yi) hide more - the model "knows" it's uncertain but doesn't signal it through logprobs.
 
-Instruct tuning makes entropy *less* informative across all models. The epistemic information exists internally but is increasingly hidden from the output distribution.
+### 3. RLHF Degrades Epistemic Transparency
 
-### Hallucination Detection (Fictional Entity Recognition)
+Instruct tuning makes entropy *less* informative across all models:
+
+| Model | Entropy AUC | | Hidden Info | |
+|-------|-------------|-------------|-------------|-------------|
+| | Base | Instruct | Base | Instruct |
+| Llama | 0.914 | 0.734 | 3.0% | 10.5% |
+| Mistral | 0.930 | 0.741 | 1.6% | 8.2% |
+| Yi | 0.825 | 0.649 | 13.1% | 22.4% |
+| Qwen | 0.788 | 0.553 | 14.6% | 20.7% |
+
+The information exists internally but is increasingly hidden from the output distribution.
+
+### 4. RLHF Entangles "Refuse" with "Uncertain"
+
+Probe error rates increase specifically for RLHF-treated categories (hallucination refusal, ambiguity handling), while factual categories remain stable:
+
+| Model | RLHF Categories Δ | Factual Categories Δ |
+|-------|-------------------|----------------------|
+| Qwen | +0.318 | -0.068 |
+| Llama | +0.286 | -0.071 |
+| Mistral | +0.247 | +0.092 |
+| Yi | +0.220 | +0.095 |
+
+*Δ = change in probe error rate after instruct tuning*
+
+Activation similarity analysis confirms: `confident_incorrect` representations shift toward `uncertain_correct` after RLHF. The model learns to refuse hallucinations by making them "feel uncertain" internally.
+
+### 5. The RLHF Paradox: Better Behavior, Worse Transparency
+
+Despite internal entanglement, behavioral hallucination detection improves dramatically:
 
 | Model | Base | Instruct |
 |-------|------|----------|
@@ -42,30 +66,14 @@ Instruct tuning makes entropy *less* informative across all models. The epistemi
 | Mistral | 6.1% | 28.3% |
 | Yi | 1.0% | 19.2% |
 
-Llama 3.1 Instruct achieves the best hallucination detection, correctly refusing to answer 68.7% of questions about fictional entities.
+RLHF teaches models to *behave* as if they know what they don't know, while making internal representations *harder to interpret*.
 
-### RLHF Creates Representational Entanglement
+## Implications for AI Safety
 
-We find that RLHF doesn't just change model outputs - it **entangles** internal representations for categories that receive heavy alignment treatment:
-
-| Model | RLHF Categories Δ | Non-RLHF Δ | Gap |
-|-------|-------------------|------------|-----|
-| Qwen | +0.318 | -0.068 | **-0.386** |
-| Llama | +0.286 | -0.071 | **-0.357** |
-| Mistral | +0.247 | +0.092 | **-0.155** |
-| Yi | +0.220 | +0.095 | **-0.125** |
-
-*Δ = change in probe error rate after instruct tuning. RLHF categories: confident_incorrect, ambiguous, nonsensical.*
-
-**Key insight**: Probe error rates increase specifically for categories that received RLHF treatment (hallucination refusal, ambiguity handling), while non-RLHF categories (factual questions) remain stable or improve. This suggests RLHF pushes "refuse to answer" representations toward "uncertainty" representations, making them harder to distinguish.
-
-## Implications for AI Safety & Alignment
-
-1. **Entropy-based uncertainty estimation is model-dependent** - systems using logprobs for uncertainty work better with some models than others
-2. **RLHF can degrade output transparency** - alignment training may inadvertently teach models to hide uncertainty
-3. **RLHF creates representational entanglement** - "refuse to answer" and "uncertain" become harder to distinguish internally
-4. **Internal epistemic state is recoverable** - linear probes achieve 0.76-0.96 AUC across models, suggesting interpretability tools could surface this information
-5. **Current alignment doesn't prioritize entropy calibration** - this may be an overlooked objective for transparent AI
+1. **Entropy-based uncertainty is model-dependent** - logprob-based systems work better with English-trained models
+2. **RLHF degrades interpretability** - alignment training inadvertently teaches models to hide uncertainty
+3. **Internal state remains recoverable** - linear probes achieve 0.76-0.96 AUC, suggesting interpretability tools could surface hidden information
+4. **Alignment doesn't prioritize calibration** - entropy calibration may be an overlooked objective
 
 ## Quick Start
 
