@@ -90,9 +90,15 @@ def load_model_data(
 
         # Determine correctness based on category
         # For confident_incorrect (fictional entities): correct if model acknowledges it's fictional
+        # For nonsensical (category errors): correct if model recognizes the question is nonsensical
+        # For ambiguous: correct if model asks for clarification or acknowledges ambiguity
         # For other categories: correct if response contains the answer
         def determine_correct(row):
             if row['category'] == 'confident_incorrect':
+                return row['acknowledged_unknown']
+            elif row['category'] == 'nonsensical':
+                return row['acknowledged_unknown']
+            elif row['category'] == 'ambiguous':
                 return row['acknowledged_unknown']
             else:
                 return row['evaluation']['contains_answer']

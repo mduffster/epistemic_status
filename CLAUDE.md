@@ -99,49 +99,51 @@ python run_analysis.py --model qwen_base --analysis all --save_plots
 - **Layer-wise analysis**: Shows where epistemic information emerges
 
 ### Evaluation Logic
-- **confident_incorrect category**: Model is "correct" if it acknowledges the fictional entity doesn't exist
+- **confident_incorrect**: Model is "correct" if it acknowledges the fictional entity doesn't exist
+- **nonsensical**: Model is "correct" if it recognizes the category error (e.g., "jealousy has no color")
+- **ambiguous**: Model is "correct" if it asks for clarification or acknowledges multiple meanings
+- **uncertain_incorrect**: Model is "correct" if it debunks the misconception
 - **Other categories**: Model is "correct" if response contains the expected answer
-- Failure mode analysis only shows prompts where the model actually failed
 
 ### Key Findings: Cross-Model Comparison
 
 **Full Results Table:**
 | Model | Entropy AUC | Probe AUC | Overall Acc | Hall. Det | Hidden Info |
 |-------|-------------|-----------|-------------|-----------|-------------|
-| Qwen base | 0.764 | 0.946 | 34.5% | 1.0% | 18.3% |
-| Qwen instruct | 0.641 | 0.946 | 52.6% | 58.6% | 30.4% |
-| Mistral base | **0.923** | **0.970** | 39.6% | 6.1% | 4.7% |
-| Mistral instruct | 0.789 | 0.945 | 44.3% | 28.3% | 15.6% |
-| Yi base | 0.845 | 0.943 | 35.3% | 1.0% | 9.7% |
-| Yi instruct | 0.695 | 0.930 | 40.9% | 19.2% | 23.5% |
-| Llama base | **0.935** | 0.959 | 39.6% | 7.1% | **2.4%** |
-| Llama instruct | 0.739 | 0.943 | 53.5% | **68.7%** | 20.5% |
+| Qwen base | 0.788 | 0.935 | 41.8% | 1.0% | 14.6% |
+| Qwen instruct | 0.553 | 0.760 | 75.9% | 58.6% | 20.7% |
+| Mistral base | **0.930** | 0.946 | 41.4% | 6.1% | **1.6%** |
+| Mistral instruct | 0.741 | 0.823 | 59.8% | 28.3% | 8.2% |
+| Yi base | 0.825 | 0.956 | 39.6% | 1.0% | 13.1% |
+| Yi instruct | 0.649 | 0.873 | 52.6% | 19.2% | 22.4% |
+| Llama base | 0.914 | 0.943 | 45.3% | 7.1% | 3.0% |
+| Llama instruct | 0.734 | 0.839 | **70.6%** | **68.7%** | 10.5% |
 
 **Architecture vs Training Data Analysis:**
 | Model | Architecture | Training | Hidden Info (base) |
 |-------|--------------|----------|-------------------|
-| Llama 3.1 8B | LLaMA | English | **2.4%** |
-| Mistral 7B | Custom | English | 4.7% |
-| Yi 6B | LLaMA-derived | Chinese | 9.7% |
-| Qwen 2.5 7B | Custom | Chinese | 18.3% |
+| Mistral 7B | Custom | English | **1.6%** |
+| Llama 3.1 8B | LLaMA | English | 3.0% |
+| Yi 6B | LLaMA-derived | Chinese | 13.1% |
+| Qwen 2.5 7B | Custom | Chinese | 14.6% |
 
 ### Key Insights
 
 1. **Training data drives epistemic transparency, not architecture**:
-   - Yi (LLaMA arch): 9.7% hidden info
-   - Llama (LLaMA arch): 2.4% hidden info
+   - Yi (LLaMA arch): 13.1% hidden info
+   - Llama (LLaMA arch): 3.0% hidden info
    - Same architecture family, 4x difference - training data is the factor
 
-2. **English-trained models have highly informative entropy** (0.92-0.94 AUC)
-3. **Chinese-trained models hide more information** (0.76-0.85 entropy AUC, 10-18% hidden)
+2. **English-trained models have highly informative entropy** (0.91-0.93 AUC)
+3. **Chinese-trained models hide more information** (0.79-0.83 entropy AUC, 13-15% hidden)
 
 4. **Instruct tuning degrades entropy informativeness** across ALL models:
-   - Qwen: +12.1% hidden info after instruct
-   - Mistral: +10.9% hidden info after instruct
-   - Yi: +13.8% hidden info after instruct
-   - Llama: +18.1% hidden info after instruct
+   - Qwen: 0.788 → 0.553 entropy AUC (+6.1% hidden info)
+   - Mistral: 0.930 → 0.741 entropy AUC (+6.6% hidden info)
+   - Yi: 0.825 → 0.649 entropy AUC (+9.3% hidden info)
+   - Llama: 0.914 → 0.734 entropy AUC (+7.5% hidden info)
 
-5. **Probe accuracy remains stable** (~0.93-0.97) regardless of instruct tuning - the information exists internally
+5. **Probe AUC drops for instruct models** - the corrected evaluation labels make correctness more nuanced
 
 6. **Hallucination detection improves with instruct tuning** but varies by model:
    - Llama: 7.1% → 68.7% (best)
@@ -153,6 +155,6 @@ python run_analysis.py --model qwen_base --analysis all --save_plots
 
 - **Entropy-based uncertainty estimation is model-dependent** - systems using logprobs work better with English-trained models (Llama, Mistral)
 - **RLHF degrades output transparency** - entropy becomes less informative after alignment across all models tested
-- **Internal epistemic state is always recoverable** - linear probes achieve ~95% AUC across all models
+- **Internal epistemic state is recoverable** - linear probes achieve 0.76-0.96 AUC across models
 - **Current RLHF doesn't prioritize entropy calibration** - the information exists internally but isn't surfaced
 - **Training data/RLHF origin may matter more than architecture** for uncertainty estimation strategies

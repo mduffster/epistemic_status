@@ -8,10 +8,10 @@ Models trained on different data exhibit fundamentally different relationships b
 
 | Model | Architecture | Training | Entropy AUC | Probe AUC | Hidden Info |
 |-------|--------------|----------|-------------|-----------|-------------|
-| Llama 3.1 8B | LLaMA | English | **0.935** | 0.959 | **2.4%** |
-| Mistral 7B | Custom | English | 0.923 | 0.970 | 4.7% |
-| Yi 6B | LLaMA-derived | Chinese | 0.845 | 0.943 | 9.7% |
-| Qwen 2.5 7B | Custom | Chinese | 0.764 | 0.946 | 18.3% |
+| Mistral 7B | Custom | English | **0.930** | 0.946 | **1.6%** |
+| Llama 3.1 8B | LLaMA | English | 0.914 | 0.943 | 3.0% |
+| Yi 6B | LLaMA-derived | Chinese | 0.825 | 0.956 | 13.1% |
+| Qwen 2.5 7B | Custom | Chinese | 0.788 | 0.935 | 14.6% |
 
 **Hidden Info** = Probe AUC - Entropy AUC (information the model knows but doesn't reveal through entropy)
 
@@ -19,19 +19,19 @@ Models trained on different data exhibit fundamentally different relationships b
 
 - **English-trained models** (Llama, Mistral) have highly informative output entropy - when they're uncertain, their logprobs show it
 - **Chinese-trained models** (Qwen, Yi) hide more epistemic information - they may "know" they're uncertain internally but don't signal it through entropy
-- **Architecture doesn't fully explain this**: Yi and Llama share the same architecture but differ dramatically in hidden info (9.7% vs 2.4%)
+- **Architecture doesn't fully explain this**: Yi and Llama share the same architecture but differ dramatically in hidden info (13.1% vs 3.0%)
 - **Training data/RLHF is the key factor**: The pattern correlates strongly with training origin
 
 ### Instruct Tuning Degrades Entropy Informativeness
 
 | Model | Entropy AUC (base) | Entropy AUC (instruct) | Hidden Info Change |
 |-------|-------------------|------------------------|-------------------|
-| Llama | 0.935 | 0.739 | +18.1% |
-| Yi | 0.845 | 0.695 | +13.8% |
-| Qwen | 0.764 | 0.641 | +12.1% |
-| Mistral | 0.923 | 0.789 | +10.9% |
+| Mistral | 0.930 | 0.741 | +6.6% |
+| Llama | 0.914 | 0.734 | +7.5% |
+| Qwen | 0.788 | 0.553 | +6.1% |
+| Yi | 0.825 | 0.649 | +9.3% |
 
-Instruct tuning makes entropy *less* informative across all models while probe accuracy remains stable. The epistemic information exists internally but is increasingly hidden from the output distribution.
+Instruct tuning makes entropy *less* informative across all models. The epistemic information exists internally but is increasingly hidden from the output distribution.
 
 ### Hallucination Detection (Fictional Entity Recognition)
 
@@ -48,7 +48,7 @@ Llama 3.1 Instruct achieves the best hallucination detection, correctly refusing
 
 1. **Entropy-based uncertainty estimation is model-dependent** - systems using logprobs for uncertainty work better with some models than others
 2. **RLHF can degrade output transparency** - alignment training may inadvertently teach models to hide uncertainty
-3. **Internal epistemic state is recoverable** - linear probes achieve ~95% AUC across all models, suggesting interpretability tools could surface this information
+3. **Internal epistemic state is recoverable** - linear probes achieve 0.76-0.96 AUC across models, suggesting interpretability tools could surface this information
 4. **Current alignment doesn't prioritize entropy calibration** - this may be an overlooked objective for transparent AI
 
 ## Quick Start
