@@ -133,7 +133,7 @@ epistemic_status/
 - TransformerLens
 - scikit-learn, pandas, numpy
 
-Tested on macOS ARM64 (M1/M2/M3) with MPS acceleration.
+Tested on macOS ARM64 (M4) with MPS acceleration.
 
 ## Citation
 
