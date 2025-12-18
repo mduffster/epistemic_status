@@ -73,8 +73,14 @@ python run_analysis.py --model qwen_base --analysis core
 python run_analysis.py --model qwen_base --analysis effects roc
 python run_analysis.py --model qwen_base --analysis layers
 
+# Entanglement analysis (probe confidence, bootstrap CIs, held-out generalization)
+python run_analysis.py --model qwen_base --analysis entanglement
+
 # Cross-model comparison
 python run_analysis.py --model qwen_base --compare qwen_instruct --analysis generalization
+
+# Entanglement comparison (base vs instruct)
+python run_analysis.py --model qwen_base --compare qwen_instruct --analysis entanglement
 
 # Full suite with plots
 python run_analysis.py --model qwen_base --analysis all --save_plots
@@ -88,6 +94,7 @@ python run_analysis.py --model qwen_base --analysis all --save_plots
 - `calibration.py` - Confidence calibration (instruct models)
 - `effects.py` - Effect sizes (Cohen's d), ROC/AUC curves
 - `comparison.py` - Cross-model generalization, bidirectional transfer
+- `entanglement.py` - RLHF entanglement analysis (probe confidence, bootstrap CIs, held-out generalization)
 - `plotting.py` - Visualization functions
 
 ### Key Analysis Features
@@ -151,10 +158,36 @@ python run_analysis.py --model qwen_base --analysis all --save_plots
    - Mistral: 6.1% → 28.3%
    - Yi: 1% → 19.2%
 
+### RLHF Creates Representational Entanglement
+
+We find that RLHF doesn't just change model outputs - it **entangles** internal representations for categories that receive heavy alignment treatment:
+
+| Model | RLHF Categories Δ | Non-RLHF Δ | Gap |
+|-------|-------------------|------------|-----|
+| Qwen | +0.318 | -0.068 | **-0.386** |
+| Llama | +0.286 | -0.071 | **-0.357** |
+| Mistral | +0.247 | +0.092 | **-0.155** |
+| Yi | +0.220 | +0.095 | **-0.125** |
+
+*Δ = change in probe error rate after instruct tuning. RLHF categories: confident_incorrect, ambiguous, nonsensical.*
+
+**Activation Similarity Analysis**: `confident_incorrect` representations shift toward `uncertain_correct` after instruct tuning across all models, confirming that "refuse to answer" and "uncertain" become entangled.
+
+### Entanglement Analysis Functions (`analysis/entanglement.py`)
+
+- `probe_confidence_by_category()` - Probe confidence (max probability) per category
+- `probe_confidence_layerwise()` - Layer-wise probe confidence analysis
+- `bootstrap_confidence_intervals()` - Statistical rigor for error rate comparisons
+- `held_out_category_generalization()` - Train excluding one category, test on it
+- `activation_similarity_by_category()` - Cosine similarity between category centroids
+- `compare_activation_similarity()` - Track similarity changes after RLHF
+- `compare_base_instruct_entanglement()` - Full base vs instruct comparison
+
 ### Alignment Implications
 
 - **Entropy-based uncertainty estimation is model-dependent** - systems using logprobs work better with English-trained models (Llama, Mistral)
 - **RLHF degrades output transparency** - entropy becomes less informative after alignment across all models tested
+- **RLHF creates representational entanglement** - "refuse to answer" and "uncertain" become harder to distinguish internally
 - **Internal epistemic state is recoverable** - linear probes achieve 0.76-0.96 AUC across models
 - **Current RLHF doesn't prioritize entropy calibration** - the information exists internally but isn't surfaced
 - **Training data/RLHF origin may matter more than architecture** for uncertainty estimation strategies

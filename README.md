@@ -44,12 +44,28 @@ Instruct tuning makes entropy *less* informative across all models. The epistemi
 
 Llama 3.1 Instruct achieves the best hallucination detection, correctly refusing to answer 68.7% of questions about fictional entities.
 
+### RLHF Creates Representational Entanglement
+
+We find that RLHF doesn't just change model outputs - it **entangles** internal representations for categories that receive heavy alignment treatment:
+
+| Model | RLHF Categories Δ | Non-RLHF Δ | Gap |
+|-------|-------------------|------------|-----|
+| Qwen | +0.318 | -0.068 | **-0.386** |
+| Llama | +0.286 | -0.071 | **-0.357** |
+| Mistral | +0.247 | +0.092 | **-0.155** |
+| Yi | +0.220 | +0.095 | **-0.125** |
+
+*Δ = change in probe error rate after instruct tuning. RLHF categories: confident_incorrect, ambiguous, nonsensical.*
+
+**Key insight**: Probe error rates increase specifically for categories that received RLHF treatment (hallucination refusal, ambiguity handling), while non-RLHF categories (factual questions) remain stable or improve. This suggests RLHF pushes "refuse to answer" representations toward "uncertainty" representations, making them harder to distinguish.
+
 ## Implications for AI Safety & Alignment
 
 1. **Entropy-based uncertainty estimation is model-dependent** - systems using logprobs for uncertainty work better with some models than others
 2. **RLHF can degrade output transparency** - alignment training may inadvertently teach models to hide uncertainty
-3. **Internal epistemic state is recoverable** - linear probes achieve 0.76-0.96 AUC across models, suggesting interpretability tools could surface this information
-4. **Current alignment doesn't prioritize entropy calibration** - this may be an overlooked objective for transparent AI
+3. **RLHF creates representational entanglement** - "refuse to answer" and "uncertain" become harder to distinguish internally
+4. **Internal epistemic state is recoverable** - linear probes achieve 0.76-0.96 AUC across models, suggesting interpretability tools could surface this information
+5. **Current alignment doesn't prioritize entropy calibration** - this may be an overlooked objective for transparent AI
 
 ## Quick Start
 
@@ -92,6 +108,7 @@ The dataset contains ~600 prompts across 6 epistemic categories:
 - **ROC/AUC comparison**: Entropy-only vs probe-based prediction
 - **Effect sizes**: Cohen's d for activation differences between correct/incorrect
 - **Cross-model generalization**: Do probes transfer between base/instruct variants?
+- **Entanglement analysis**: Probe confidence by category, held-out generalization, activation similarity
 
 ## Models Tested
 
@@ -119,7 +136,8 @@ epistemic_status/
 │   ├── entropy.py          # Entropy analysis
 │   ├── effects.py          # Effect sizes, ROC/AUC
 │   ├── calibration.py      # Confidence calibration
-│   └── comparison.py       # Cross-model analysis
+│   ├── comparison.py       # Cross-model analysis
+│   └── entanglement.py     # RLHF entanglement analysis
 └── activations/            # Collected activation data
     ├── qwen_base/
     ├── qwen_instruct/

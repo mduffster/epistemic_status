@@ -36,6 +36,16 @@ from analysis import (
 )
 from analysis.effects import compute_layer_auc
 from analysis.comparison import bidirectional_generalization, layer_generalization
+from analysis.entanglement import (
+    probe_confidence_by_category,
+    probe_confidence_layerwise,
+    bootstrap_confidence_intervals,
+    held_out_category_generalization,
+    compare_base_instruct_entanglement,
+    run_full_entanglement_analysis,
+    activation_similarity_by_category,
+    compare_activation_similarity,
+)
 from analysis.plotting import (
     plot_entropy_distributions,
     plot_layer_analysis,
@@ -130,6 +140,35 @@ def run_comparison_analysis(data1, data2, save_plots=False):
     return comparison, gen_results
 
 
+def run_entanglement_analysis(data, n_bootstrap=50):
+    """Run entanglement analysis suite."""
+    print("\n" + "=" * 60)
+    print("ENTANGLEMENT ANALYSIS")
+    print("=" * 60)
+
+    # Probe confidence by category
+    probe_confidence_by_category(data)
+
+    # Bootstrap CIs for statistical rigor
+    bootstrap_confidence_intervals(data, n_bootstrap=n_bootstrap)
+
+    # Held-out category generalization
+    held_out_category_generalization(data)
+
+    # Activation similarity
+    activation_similarity_by_category(data)
+
+
+def run_entanglement_comparison(data1, data2, n_bootstrap=50):
+    """Compare entanglement between base and instruct models."""
+    print("\n" + "=" * 60)
+    print(f"ENTANGLEMENT COMPARISON: {data1.name} vs {data2.name}")
+    print("=" * 60)
+
+    compare_base_instruct_entanglement(data1, data2, n_bootstrap=n_bootstrap)
+    compare_activation_similarity(data1, data2)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Epistemic Probing Analysis")
     parser.add_argument("--model", required=True, help="Model name (e.g., qwen_base)")
@@ -139,7 +178,7 @@ def main():
         "--analysis",
         nargs='+',
         choices=['core', 'controlled', 'layers', 'entropy', 'calibration',
-                 'effects', 'roc', 'generalization', 'all'],
+                 'effects', 'roc', 'generalization', 'entanglement', 'all'],
         default=['core'],
         help="Analysis types to run"
     )
@@ -150,7 +189,7 @@ def main():
     # Expand 'all' to all analyses
     if 'all' in args.analysis:
         args.analysis = ['core', 'controlled', 'layers', 'entropy',
-                         'calibration', 'effects', 'roc']
+                         'calibration', 'effects', 'roc', 'entanglement']
         if args.compare:
             args.analysis.append('generalization')
 
@@ -190,6 +229,9 @@ def main():
     if 'roc' in args.analysis:
         run_effects_analysis(data, args.save_plots)
 
+    if 'entanglement' in args.analysis:
+        run_entanglement_analysis(data)
+
     # Comparison with second model
     if args.compare:
         print(f"\n{'=' * 60}")
@@ -200,6 +242,9 @@ def main():
 
         if 'generalization' in args.analysis:
             run_comparison_analysis(data, data2, args.save_plots)
+
+        if 'entanglement' in args.analysis:
+            run_entanglement_comparison(data, data2)
 
         # If layers analysis was run, also compare layers
         if 'layers' in args.analysis:
