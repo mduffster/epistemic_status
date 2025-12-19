@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **RLHF Entangles Epistemic Representations in Language Models**
 
-This project shows that RLHF degrades the separability of epistemic states in language model activations. By probing hidden states across 8 models (4 families × base/instruct), we find that alignment training entangles "refuse to answer" representations with "genuine uncertainty," making internal epistemic states harder to distinguish despite improved behavioral performance.
+This project shows that RLHF degrades the separability of epistemic states in language model activations. By probing hidden states across 8 models (4 families × base/instruct), we find that alignment training entangles **trained epistemic behaviors** (admitting ignorance, acknowledging ambiguity) with **genuine uncertainty**, making these internal states harder to distinguish despite improved behavioral performance.
 
 ## Key Commands
 
@@ -162,18 +162,18 @@ python run_analysis.py --model qwen_base --analysis all --save_plots
 
 ### RLHF Creates Representational Entanglement
 
-We find that RLHF doesn't just change model outputs - it **entangles** internal representations for categories that receive heavy alignment treatment:
+We find that RLHF doesn't just change model outputs - it **entangles** internal representations for policy categories (where RLHF trains epistemic behaviors):
 
-| Model | RLHF Categories Δ | Non-RLHF Δ | Gap |
-|-------|-------------------|------------|-----|
+| Model | Policy Δ | Factual Δ | Gap |
+|-------|----------|-----------|-----|
 | Qwen | +0.318 | -0.068 | **-0.386** |
 | Llama | +0.286 | -0.071 | **-0.357** |
 | Mistral | +0.247 | +0.092 | **-0.155** |
 | Yi | +0.220 | +0.095 | **-0.125** |
 
-*Δ = change in probe error rate after instruct tuning. RLHF categories: confident_incorrect, ambiguous, nonsensical.*
+*Δ = change in probe error rate after instruct tuning. Policy categories: confident_incorrect, ambiguous, nonsensical (trained behaviors). Factual categories: confident_correct, uncertain_correct (knowledge recall).*
 
-**Activation Similarity Analysis**: `confident_incorrect` representations shift toward `uncertain_correct` after instruct tuning across all models, confirming that "refuse to answer" and "uncertain" become entangled.
+**Activation Similarity Analysis**: `confident_incorrect` representations shift toward `uncertain_correct` after instruct tuning across all models, confirming that trained epistemic behaviors become entangled with genuine uncertainty.
 
 ### Entanglement Analysis Functions (`analysis/entanglement.py`)
 
@@ -189,7 +189,7 @@ We find that RLHF doesn't just change model outputs - it **entangles** internal 
 
 - **Entropy-based uncertainty estimation is model-dependent** - systems using logprobs work better with English-trained models (Llama, Mistral)
 - **RLHF degrades output transparency** - entropy becomes less informative after alignment across all models tested
-- **RLHF creates representational entanglement** - "refuse to answer" and "uncertain" become harder to distinguish internally
+- **RLHF creates representational entanglement** - trained epistemic behaviors (admitting ignorance, acknowledging ambiguity) become entangled with genuine uncertainty
 - **Internal epistemic state is recoverable** - linear probes achieve 0.76-0.96 AUC across models
 - **Current RLHF doesn't prioritize entropy calibration** - the information exists internally but isn't surfaced
 - **Training data/RLHF origin may matter more than architecture** for uncertainty estimation strategies

@@ -1,8 +1,8 @@
 # RLHF Entangles Epistemic Representations in Language Models
 
-We show that RLHF degrades the separability of epistemic states in language model activations. By probing hidden states across 8 models (4 families × base/instruct), we find that alignment training entangles "refuse to answer" representations with "genuine uncertainty," making internal epistemic states harder to distinguish despite improved behavioral performance.
+We show that RLHF degrades the separability of epistemic states in language model activations. By probing hidden states across 8 models (4 families × base/instruct), we find that alignment training entangles **trained epistemic behaviors** (admitting ignorance, acknowledging ambiguity) with **genuine uncertainty**, making these internal states harder to distinguish despite improved behavioral performance.
 
-**Context**: Prior work established that language models represent epistemic states internally ([Kadavath et al. 2022](https://arxiv.org/abs/2207.05221), [Azaria & Mitchell 2023](https://arxiv.org/abs/2304.13734)). We extend this by showing *how RLHF alters these representations* - specifically, that alignment creates targeted entanglement where it modifies behavior.
+**Context**: Prior work established that language models represent epistemic states internally ([Kadavath et al. 2022](https://arxiv.org/abs/2207.05221), [Azaria & Mitchell 2023](https://arxiv.org/abs/2304.13734)). We extend this by showing *how RLHF alters these representations* - specifically, that alignment creates targeted entanglement where it trains epistemic policy behaviors.
 
 ## Key Findings
 
@@ -41,20 +41,24 @@ Instruct tuning makes entropy *less* informative across all models:
 
 The epistemic information exists internally but is increasingly hidden from the output distribution.
 
-### 4. Entanglement Occurs Where RLHF Applies Pressure
+### 4. Entanglement Occurs Where RLHF Trains Policy Behaviors
 
-The critical finding: representational degradation is *selective*. Probe error rates increase specifically for categories where RLHF modifies behavior (refusing hallucinations, acknowledging ambiguity, rejecting nonsense), while factual question categories remain stable or improve:
+The critical finding: representational degradation is *selective*. Probe error rates increase specifically for **policy categories** - where RLHF trains epistemic behaviors - while **factual categories** remain stable or improve:
 
-| Model | RLHF-Targeted Δ | Factual Δ | Selective Gap |
-|-------|-----------------|-----------|---------------|
+| Model | Policy Δ | Factual Δ | Selective Gap |
+|-------|----------|-----------|---------------|
 | Qwen | +0.318 | -0.068 | **0.386** |
 | Llama | +0.286 | -0.071 | **0.357** |
 | Mistral | +0.247 | +0.092 | **0.155** |
 | Yi | +0.220 | +0.095 | **0.125** |
 
-*Δ = change in probe error rate after instruct tuning. RLHF-targeted categories: `confident_incorrect` (fictional entities), `ambiguous`, `nonsensical`. Factual categories: `confident_correct`, `uncertain_correct`.*
+*Δ = change in probe error rate after instruct tuning.*
 
-This suggests RLHF warps the representational geometry specifically at points of behavioral intervention. Activation similarity analysis confirms the mechanism: `confident_incorrect` representations shift toward `uncertain_correct` after RLHF. The model learns to refuse hallucinations by pushing those representations toward "genuine uncertainty" - entangling two epistemically distinct states.
+**Why "policy" vs "factual"?**
+- **Policy categories** (`confident_incorrect`, `ambiguous`, `nonsensical`): Correct response requires trained behavior - admitting "I don't know," asking for clarification, recognizing category errors. RLHF explicitly teaches these.
+- **Factual categories** (`confident_correct`, `uncertain_correct`): Correct response requires recalling knowledge. RLHF doesn't specifically target these.
+
+This suggests RLHF warps representational geometry specifically where it trains epistemic behaviors. Activation similarity analysis confirms the mechanism: `confident_incorrect` representations shift toward `uncertain_correct` after RLHF. The model learns to say "I don't know" by pushing those representations toward genuine uncertainty - entangling two epistemically distinct states.
 
 ### 5. The RLHF Paradox: Better Behavior, Worse Transparency
 
@@ -71,8 +75,8 @@ RLHF teaches models to *behave* as if they know what they don't know, while maki
 
 ## Implications for Alignment & Interpretability
 
-1. **RLHF trades interpretability for behavior** - alignment achieves better outputs by warping internal representations, not by teaching models to "truly understand" uncertainty
-2. **Entanglement is targeted** - degradation occurs specifically where RLHF intervenes, suggesting interpretability researchers should focus on alignment-modified regions
+1. **RLHF trades interpretability for behavior** - alignment achieves epistemic caution by warping internal representations, not by building distinct "I should acknowledge uncertainty" circuits
+2. **Entanglement is targeted** - degradation occurs specifically where RLHF trains policy behaviors, suggesting interpretability researchers should focus on alignment-modified regions
 3. **Entropy-based uncertainty is unreliable** - logprob-based uncertainty estimation works for some models but fails for others; internal probing may be necessary for robust uncertainty quantification
 4. **Internal state remains recoverable** - linear probes achieve 0.76-0.96 AUC even after RLHF, suggesting interpretability tools could surface the hidden epistemic information that alignment obscures
 5. **Calibration is not an alignment objective** - current RLHF prioritizes behavioral compliance over transparent uncertainty signaling
@@ -95,16 +99,16 @@ python run_analysis.py --model llama_base --analysis all
 
 ## Dataset
 
-The dataset contains ~600 prompts across 6 epistemic categories:
+The dataset contains ~600 prompts across 6 epistemic categories, divided into **factual** (correct response = recall knowledge) and **policy** (correct response = trained epistemic behavior):
 
-| Category | Description | Example |
-|----------|-------------|---------|
-| `confident_correct` | Clear factual questions | "What is 2+2?" |
-| `confident_incorrect` | Fictional entities (hallucination probes) | "What is the capital of Bugoviana?" |
-| `uncertain_correct` | Obscure but verifiable facts | "Who won the 1923 Nobel Prize in Physics?" |
-| `uncertain_incorrect` | Common misconceptions | "What percentage of the brain do humans use?" |
-| `ambiguous` | Context-dependent questions | "Is a tomato a fruit?" |
-| `nonsensical` | Category error questions | "What color is jealousy?" |
+| Category | Type | Description | Correct Response |
+|----------|------|-------------|------------------|
+| `confident_correct` | Factual | Clear factual questions | Recall answer |
+| `uncertain_correct` | Factual | Obscure but verifiable facts | Recall answer |
+| `uncertain_incorrect` | Factual | Common misconceptions | Debunk myth |
+| `confident_incorrect` | Policy | Fictional entities | Admit "I don't know" |
+| `ambiguous` | Policy | Context-dependent questions | Acknowledge ambiguity |
+| `nonsensical` | Policy | Category error questions | Recognize nonsense |
 
 ## Methodology
 
