@@ -7,6 +7,7 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
+from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import cross_val_score, StratifiedKFold
 from sklearn.preprocessing import StandardScaler
 
@@ -256,3 +257,137 @@ def probe_with_controls(
         'accuracy_mean': scores.mean(),
         'accuracy_std': scores.std()
     }
+
+
+def run_mlp_probe(
+    data: ModelData,
+    target: str = 'correct',
+    position: str = 'last',
+    layer: Optional[int] = None,
+    categories: Optional[List[str]] = None,
+    hidden_layers: Tuple[int, ...] = (256, 128),
+    n_folds: int = 5,
+    print_output: bool = True
+) -> Optional[Dict]:
+    """
+    Run MLP (non-linear) probe with cross-validation.
+
+    Args:
+        data: ModelData object
+        target: What to predict
+        position: Token position
+        layer: Specific layer or None for all
+        categories: Subset of categories or None for all
+        hidden_layers: MLP hidden layer sizes
+        n_folds: Number of CV folds
+
+    Returns:
+        Dictionary with results or None if insufficient data
+    """
+    X, y, _ = prepare_probe_data(data, target, position, layer, categories)
+
+    # Check for class balance
+    unique, counts = np.unique(y, return_counts=True)
+    if print_output:
+        print(f"\nClass distribution: {dict(zip(unique, counts))}")
+
+    if len(unique) < 2:
+        if print_output:
+            print("Skipping: Only one class present in data")
+        return None
+
+    # Adjust folds if needed
+    if min(counts) < n_folds:
+        n_folds = min(counts)
+
+    # Standardize and run CV
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+
+    clf = MLPClassifier(
+        hidden_layer_sizes=hidden_layers,
+        max_iter=500,
+        random_state=42,
+        early_stopping=True,
+        validation_fraction=0.1
+    )
+    cv = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=42)
+    scores = cross_val_score(clf, X_scaled, y, cv=cv, scoring='accuracy')
+
+    results = {
+        'target': target,
+        'position': position,
+        'layer': layer,
+        'categories': categories,
+        'hidden_layers': hidden_layers,
+        'n_samples': len(y),
+        'n_features': X.shape[1],
+        'accuracy_mean': scores.mean(),
+        'accuracy_std': scores.std(),
+        'fold_scores': scores
+    }
+
+    if print_output:
+        print(f"MLP Accuracy: {scores.mean():.3f} (+/- {scores.std():.3f})")
+
+    return results
+
+
+def compare_linear_vs_mlp(
+    data: ModelData,
+    target: str = 'correct',
+    position: str = 'last',
+    categories: Optional[List[str]] = None,
+    hidden_layers: Tuple[int, ...] = (256, 128),
+    n_folds: int = 5,
+    print_output: bool = True
+) -> Dict:
+    """
+    Compare linear probe vs MLP probe performance.
+
+    Returns:
+        Dictionary with comparison results
+    """
+    if print_output:
+        print(f"\n{'='*60}")
+        print(f"LINEAR vs MLP PROBE COMPARISON")
+        print(f"{'='*60}")
+
+    # Run linear probe
+    if print_output:
+        print("\n--- Linear Probe ---")
+    linear_results = run_linear_probe(
+        data, target, position, None, categories,
+        n_folds=n_folds, print_output=print_output
+    )
+
+    # Run MLP probe
+    if print_output:
+        print("\n--- MLP Probe ---")
+    mlp_results = run_mlp_probe(
+        data, target, position, None, categories,
+        hidden_layers=hidden_layers, n_folds=n_folds,
+        print_output=print_output
+    )
+
+    if linear_results and mlp_results:
+        diff = mlp_results['accuracy_mean'] - linear_results['accuracy_mean']
+        if print_output:
+            print(f"\n--- Comparison ---")
+            print(f"Linear:     {linear_results['accuracy_mean']:.3f} (+/- {linear_results['accuracy_std']:.3f})")
+            print(f"MLP:        {mlp_results['accuracy_mean']:.3f} (+/- {mlp_results['accuracy_std']:.3f})")
+            print(f"Difference: {diff:+.3f}")
+            if abs(diff) < 0.02:
+                print("→ Minimal difference: information is linearly encoded")
+            elif diff > 0.02:
+                print("→ MLP advantage: some non-linear structure exists")
+
+        return {
+            'linear': linear_results,
+            'mlp': mlp_results,
+            'difference': diff,
+            'linear_accuracy': linear_results['accuracy_mean'],
+            'mlp_accuracy': mlp_results['accuracy_mean']
+        }
+
+    return {'linear': linear_results, 'mlp': mlp_results, 'difference': None}

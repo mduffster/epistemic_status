@@ -124,6 +124,23 @@ The dataset contains ~600 prompts across 6 epistemic categories, divided into **
 - **Cross-model generalization**: Do probes transfer between base/instruct variants?
 - **Entanglement analysis**: Probe confidence by category, held-out generalization, activation similarity
 
+### Linear vs Non-Linear Probes
+
+To verify that degradation isn't an artifact of linear probing, we compared linear probes to MLP classifiers (2 hidden layers, 256→128 units):
+
+| Model | Linear | MLP | Diff |
+|-------|--------|-----|------|
+| qwen_base | 0.812 | 0.800 | -0.012 |
+| qwen_instruct | 0.711 | 0.781 | +0.070 |
+| llama_base | 0.869 | 0.883 | +0.014 |
+| llama_instruct | 0.672 | 0.771 | +0.099 |
+| mistral_base | 0.907 | 0.905 | -0.002 |
+| mistral_instruct | 0.752 | 0.740 | -0.012 |
+| yi_base | 0.825 | 0.839 | +0.014 |
+| yi_instruct | 0.773 | 0.764 | -0.008 |
+
+Base models are linearly encoded (MLP ≈ Linear). Qwen and Llama instruct show some non-linear structure (+7-10%), but even MLP probes don't recover base model performance, confirming genuine representational degradation.
+
 ## Models Tested
 
 | Family | Base | Instruct |
