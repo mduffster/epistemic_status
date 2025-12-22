@@ -12,10 +12,13 @@ Usage:
 """
 
 import argparse
+import json
 from pathlib import Path
+from datetime import datetime
 
-# Output directory for plots
+# Output directories
 PLOTS_DIR = Path(__file__).parent / "plots"
+RESULTS_DIR = Path(__file__).parent / "results"
 
 from analysis import (
     load_model_data,
@@ -54,6 +57,34 @@ from analysis.plotting import (
     plot_calibration_curve,
     plot_generalization_layers,
 )
+
+
+def save_results(results: dict, name: str):
+    """Save results dictionary to JSON file."""
+    RESULTS_DIR.mkdir(exist_ok=True)
+
+    # Convert numpy types to Python types for JSON serialization
+    def convert(obj):
+        if hasattr(obj, 'tolist'):
+            return obj.tolist()
+        if hasattr(obj, 'item'):
+            return obj.item()
+        if isinstance(obj, dict):
+            return {k: convert(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [convert(v) for v in obj]
+        return obj
+
+    results_clean = convert(results)
+    results_clean['_metadata'] = {
+        'generated_at': datetime.now().isoformat(),
+        'name': name
+    }
+
+    filepath = RESULTS_DIR / f"{name}.json"
+    with open(filepath, 'w') as f:
+        json.dump(results_clean, f, indent=2)
+    print(f"💾 Saved results to {filepath}")
 
 
 def run_core_analysis(data, save_plots=False):
@@ -146,17 +177,22 @@ def run_entanglement_analysis(data, n_bootstrap=50):
     print("ENTANGLEMENT ANALYSIS")
     print("=" * 60)
 
+    results = {}
+
     # Probe confidence by category
-    probe_confidence_by_category(data)
+    results['probe_confidence'] = probe_confidence_by_category(data)
 
     # Bootstrap CIs for statistical rigor
-    bootstrap_confidence_intervals(data, n_bootstrap=n_bootstrap)
+    results['bootstrap_ci'] = bootstrap_confidence_intervals(data, n_bootstrap=n_bootstrap)
 
     # Held-out category generalization
-    held_out_category_generalization(data)
+    results['held_out'] = held_out_category_generalization(data)
 
     # Activation similarity
-    activation_similarity_by_category(data)
+    results['activation_similarity'] = activation_similarity_by_category(data)
+
+    save_results(results, f"{data.name}_entanglement")
+    return results
 
 
 def run_entanglement_comparison(data1, data2, n_bootstrap=50):
@@ -165,8 +201,12 @@ def run_entanglement_comparison(data1, data2, n_bootstrap=50):
     print(f"ENTANGLEMENT COMPARISON: {data1.name} vs {data2.name}")
     print("=" * 60)
 
-    compare_base_instruct_entanglement(data1, data2, n_bootstrap=n_bootstrap)
-    compare_activation_similarity(data1, data2)
+    results = {}
+    results['error_rate_comparison'] = compare_base_instruct_entanglement(data1, data2, n_bootstrap=n_bootstrap)
+    results['activation_similarity'] = compare_activation_similarity(data1, data2)
+
+    save_results(results, f"{data1.name}_vs_{data2.name}_entanglement")
+    return results
 
 
 def main():

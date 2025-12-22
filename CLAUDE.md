@@ -173,7 +173,7 @@ We find that RLHF doesn't just change model outputs - it **entangles** internal 
 
 *Δ = change in probe error rate after instruct tuning. Policy categories: confident_incorrect, ambiguous, nonsensical (trained behaviors). Factual categories: confident_correct, uncertain_correct (knowledge recall).*
 
-**Activation Similarity Analysis**: `confident_incorrect` representations shift toward `uncertain_correct` after instruct tuning across all models, confirming that trained epistemic behaviors become entangled with genuine uncertainty.
+**Key finding**: Probe error rates consistently increase for policy categories across all models, indicating that RLHF entangles trained epistemic behaviors with other internal states, making them harder to distinguish via linear probing.
 
 ### Entanglement Analysis Functions (`analysis/entanglement.py`)
 

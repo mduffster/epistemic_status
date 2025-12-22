@@ -58,7 +58,7 @@ The critical finding: representational degradation is *selective*. Probe error r
 - **Policy categories** (`confident_incorrect`, `ambiguous`, `nonsensical`): Correct response requires trained behavior - admitting "I don't know," asking for clarification, recognizing category errors. RLHF explicitly teaches these.
 - **Factual categories** (`confident_correct`, `uncertain_correct`): Correct response requires recalling knowledge. RLHF doesn't specifically target these.
 
-This suggests RLHF warps representational geometry specifically where it trains epistemic behaviors. Activation similarity analysis confirms the mechanism: `confident_incorrect` representations shift toward `uncertain_correct` after RLHF. The model learns to say "I don't know" by pushing those representations toward genuine uncertainty - entangling two epistemically distinct states.
+This suggests RLHF warps representational geometry specifically where it trains epistemic behaviors. The model learns to say "I don't know" through representational changes that entangle trained behaviors with genuine uncertainty states, making these epistemically distinct states harder to distinguish via linear probing.
 
 ### 5. The RLHF Paradox: Better Behavior, Worse Transparency
 

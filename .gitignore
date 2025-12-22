@@ -8,3 +8,4 @@ activations/*
 logs*
 analysis/__pycache__
 analysis/__pycache__/*
+*.json

@@ -6,6 +6,7 @@ making them harder to distinguish via linear probing.
 """
 
 from typing import Dict, List, Optional, Tuple
+import gc
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
@@ -16,6 +17,11 @@ from sklearn.metrics.pairwise import cosine_similarity
 from scipy import stats
 
 from .loader import ModelData, get_activation_matrix
+
+
+def _cleanup():
+    """Force garbage collection."""
+    gc.collect()
 
 
 CATEGORIES = ['confident_correct', 'confident_incorrect', 'uncertain_correct',
@@ -259,6 +265,12 @@ def bootstrap_confidence_intervals(
             if mask.sum() > 0:
                 bootstrap_errors[cat].append(errors[mask].mean())
 
+        # Cleanup after each iteration to prevent memory accumulation
+        del X_train, X_test, y_train, y_test, idx_train, idx_test
+        del X_train_scaled, X_test_scaled, scaler, clf, preds, errors, test_cats
+        if i % 10 == 0:
+            _cleanup()
+
     # Compute CIs
     alpha = 1 - confidence_level
     results = {}
@@ -418,13 +430,17 @@ def compare_base_instruct_entanglement(
         print("BASE vs INSTRUCT ENTANGLEMENT COMPARISON")
         print("=" * 70)
 
-    # Get probe confidence for both
+    # Process base model first, then cleanup
     base_conf = probe_confidence_by_category(base_data, position, print_output=False)
-    inst_conf = probe_confidence_by_category(instruct_data, position, print_output=False)
-
-    # Get bootstrap CIs for both
+    _cleanup()
     base_ci = bootstrap_confidence_intervals(base_data, position, n_bootstrap, print_output=False)
+    _cleanup()
+
+    # Process instruct model
+    inst_conf = probe_confidence_by_category(instruct_data, position, print_output=False)
+    _cleanup()
     inst_ci = bootstrap_confidence_intervals(instruct_data, position, n_bootstrap, print_output=False)
+    _cleanup()
 
     results = {
         'base': base_conf,
