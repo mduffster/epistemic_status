@@ -10,7 +10,7 @@ from .probing import run_linear_probe, run_mlp_probe, layer_analysis, compare_po
 from .entropy import entropy_analysis, entropy_vs_probe
 from .calibration import confidence_calibration
 from .effects import compute_effect_sizes, compute_roc_auc
-from .comparison import cross_model_generalization, compare_models
+from .comparison import cross_model_generalization, compare_models, transfer_by_category
 
 __all__ = [
     'load_model_data',
@@ -31,4 +31,5 @@ __all__ = [
     'compute_roc_auc',
     'cross_model_generalization',
     'compare_models',
+    'transfer_by_category',
 ]

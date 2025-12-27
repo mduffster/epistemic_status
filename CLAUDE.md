@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**RLHF Entangles Epistemic Representations in Language Models**
+**Fine-Tuning Entangles Epistemic Representations in Language Models**
 
-This project shows that RLHF degrades the separability of epistemic states in language model activations. By probing hidden states across 8 models (4 families × base/instruct), we find that alignment training entangles **trained epistemic behaviors** (admitting ignorance, acknowledging ambiguity) with **genuine uncertainty**, making these internal states harder to distinguish despite improved behavioral performance.
+This project shows that fine-tuning degrades the separability of epistemic states in language model activations. By probing hidden states across 8 models (4 families × base/instruct), we find that alignment training entangles **trained epistemic behaviors** (admitting ignorance, acknowledging ambiguity) with **genuine uncertainty**, making these internal states harder to distinguish despite improved behavioral performance. Critically, **RLHF/DPO roughly doubles the entanglement effect compared to SFT alone**.
 
 ## Key Commands
 
@@ -96,7 +96,7 @@ python run_analysis.py --model qwen_base --analysis all --save_plots
 - `calibration.py` - Confidence calibration (instruct models)
 - `effects.py` - Effect sizes (Cohen's d), ROC/AUC curves
 - `comparison.py` - Cross-model generalization, bidirectional transfer
-- `entanglement.py` - RLHF entanglement analysis (probe confidence, bootstrap CIs, held-out generalization)
+- `entanglement.py` - Fine-tuning entanglement analysis (probe confidence, bootstrap CIs, held-out generalization)
 - `plotting.py` - Visualization functions
 
 ### Key Analysis Features
@@ -128,13 +128,15 @@ python run_analysis.py --model qwen_base --analysis all --save_plots
 | Llama base | 0.914 | 0.943 | 45.3% | 7.1% | 3.0% |
 | Llama instruct | 0.734 | 0.839 | **70.6%** | **68.7%** | 10.5% |
 
-**Architecture vs Training Data Analysis:**
-| Model | Architecture | Training | Hidden Info (base) |
-|-------|--------------|----------|-------------------|
-| Mistral 7B | Custom | English | **1.6%** |
-| Llama 3.1 8B | LLaMA | English | 3.0% |
-| Yi 6B | LLaMA-derived | Chinese | 13.1% |
-| Qwen 2.5 7B | Custom | Chinese | 14.6% |
+**Models and Training Methods:**
+| Model | Architecture | Training Data | Instruct Training | Hidden Info (base) |
+|-------|--------------|---------------|-------------------|-------------------|
+| Llama 3.1 8B | LLaMA | English | SFT + RLHF + DPO | 3.0% |
+| Mistral 7B | Custom | English | SFT only | **1.6%** |
+| Yi 6B | LLaMA-derived | Chinese | SFT only | 13.1% |
+| Qwen 2.5 7B | Custom | Chinese | SFT + DPO + GRPO | 14.6% |
+
+This natural experiment allows comparing SFT-only vs RLHF/DPO effects.
 
 ### Key Insights
 
@@ -160,20 +162,24 @@ python run_analysis.py --model qwen_base --analysis all --save_plots
    - Mistral: 6.1% → 28.3%
    - Yi: 1% → 19.2%
 
-### RLHF Creates Representational Entanglement
+### Fine-Tuning Creates Representational Entanglement
 
-We find that RLHF doesn't just change model outputs - it **entangles** internal representations for policy categories (where RLHF trains epistemic behaviors):
+We find that fine-tuning doesn't just change model outputs - it **entangles** internal representations for policy categories (where fine-tuning trains epistemic behaviors):
 
-| Model | Policy Δ | Factual Δ | Gap |
-|-------|----------|-----------|-----|
-| Qwen | +0.318 | -0.068 | **-0.386** |
-| Llama | +0.286 | -0.071 | **-0.357** |
-| Mistral | +0.247 | +0.092 | **-0.155** |
-| Yi | +0.220 | +0.095 | **-0.125** |
+| Model | Training Method | Policy Δ | Factual Δ | Gap |
+|-------|-----------------|----------|-----------|-----|
+| Qwen | SFT + DPO + GRPO | +0.318 | -0.068 | **0.386** |
+| Llama | SFT + RLHF + DPO | +0.286 | -0.071 | **0.357** |
+| Mistral | SFT only | +0.247 | +0.092 | 0.155 |
+| Yi | SFT only | +0.220 | +0.095 | 0.125 |
 
 *Δ = change in probe error rate after instruct tuning. Policy categories: confident_incorrect, ambiguous, nonsensical (trained behaviors). Factual categories: confident_correct, uncertain_correct (knowledge recall).*
 
-**Key finding**: Probe error rates consistently increase for policy categories across all models, indicating that RLHF entangles trained epistemic behaviors with other internal states, making them harder to distinguish via linear probing.
+**Key finding**: RLHF/DPO roughly doubles the entanglement effect:
+- **SFT-only models** (Mistral, Yi): Policy Δ ~+0.23, gap ~0.14
+- **RLHF/DPO models** (Llama, Qwen): Policy Δ ~+0.30, gap ~0.37
+
+SFT alone creates some entanglement, but preference optimization significantly amplifies the effect.
 
 ### Entanglement Analysis Functions (`analysis/entanglement.py`)
 
@@ -182,14 +188,15 @@ We find that RLHF doesn't just change model outputs - it **entangles** internal 
 - `bootstrap_confidence_intervals()` - Statistical rigor for error rate comparisons
 - `held_out_category_generalization()` - Train excluding one category, test on it
 - `activation_similarity_by_category()` - Cosine similarity between category centroids
-- `compare_activation_similarity()` - Track similarity changes after RLHF
+- `compare_activation_similarity()` - Track similarity changes after fine-tuning
 - `compare_base_instruct_entanglement()` - Full base vs instruct comparison
 
 ### Alignment Implications
 
 - **Entropy-based uncertainty estimation is model-dependent** - systems using logprobs work better with English-trained models (Llama, Mistral)
-- **RLHF degrades output transparency** - entropy becomes less informative after alignment across all models tested
-- **RLHF creates representational entanglement** - trained epistemic behaviors (admitting ignorance, acknowledging ambiguity) become entangled with genuine uncertainty
+- **Fine-tuning degrades output transparency** - entropy becomes less informative after alignment across all models tested
+- **RLHF/DPO amplifies entanglement** - preference optimization roughly doubles the effect compared to SFT alone
+- **Fine-tuning creates representational entanglement** - trained epistemic behaviors (admitting ignorance, acknowledging ambiguity) become entangled with genuine uncertainty
 - **Internal epistemic state is recoverable** - linear probes achieve 0.76-0.96 AUC across models
-- **Current RLHF doesn't prioritize entropy calibration** - the information exists internally but isn't surfaced
-- **Training data/RLHF origin may matter more than architecture** for uncertainty estimation strategies
+- **Current fine-tuning doesn't prioritize entropy calibration** - the information exists internally but isn't surfaced
+- **Training data origin may matter more than architecture** for uncertainty estimation strategies
