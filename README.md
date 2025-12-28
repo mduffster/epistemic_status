@@ -3,7 +3,7 @@
 We show that fine-tuning degrades the separability of epistemic states in language model activations. By probing hidden states across 8 models (4 families × base/instruct), we find that alignment training entangles **trained epistemic behaviors** (admitting ignorance, acknowledging ambiguity) with **genuine uncertainty**, making these internal states harder to distinguish despite improved behavioral performance.
 
 **Context**: Prior work established that language models represent epistemic states internally ([Kadavath et al. 2022](https://arxiv.org/abs/2207.05221), [Azaria & Mitchell 2023](https://arxiv.org/abs/2304.13734)). We extend this by showing *how fine-tuning alters these representations* - specifically, that alignment creates targeted entanglement where it trains epistemic policy behaviors. Critically, we find that **RLHF/DPO roughly doubles the entanglement effect compared to SFT alone**.
-
+    
 ## Key Findings
 
 ### 1. Models Hide Epistemic Information
@@ -58,7 +58,18 @@ The critical finding: representational degradation is *selective*. Probe error r
 - **SFT-only models** (Mistral, Yi): Policy Δ ~+0.23, gap ~0.14
 - **RLHF/DPO models** (Llama, Qwen): Policy Δ ~+0.30, gap ~0.37
 
-SFT alone creates some entanglement (likely from demonstration data showing epistemic behaviors), but preference optimization (RLHF, DPO) significantly amplifies the effect.
+**Probe transfer confirms the mechanism.** Training a probe on base and testing on instruct reveals how representations change:
+
+| Model | Training | Factual Transfer | Policy Transfer | Gap |
+|-------|----------|------------------|-----------------|-----|
+| Qwen | SFT + DPO + GRPO | 0.821 | 0.382 | **+0.44** |
+| Llama | SFT + RLHF + DPO | 0.879 | 0.591 | **+0.29** |
+| Mistral | SFT only | 0.252 | 0.650 | -0.40 |
+| Yi | SFT only | 0.668 | 0.429 | +0.24 |
+
+RLHF/DPO models show **selective preservation**: factual representations transfer well (~85%) while policy representations are warped (~49%). The base model's "correct/incorrect" structure remains intact for factual questions but is disrupted for policy questions.
+
+SFT-only models show **unpredictable restructuring**: Mistral's factual representations are actually *inverted* (1-accuracy = 0.75), while Yi shows uniform degradation. No consistent pattern.
 
 **Why "policy" vs "factual"?**
 - **Policy categories** (`confident_incorrect`, `ambiguous`, `nonsensical`): Correct response requires trained behavior - admitting "I don't know," asking for clarification, recognizing category errors. Fine-tuning explicitly teaches these.

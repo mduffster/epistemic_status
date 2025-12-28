@@ -179,10 +179,21 @@ We find that fine-tuning doesn't just change model outputs - it **entangles** in
 - **SFT-only models** (Mistral, Yi): Policy Δ ~+0.23, gap ~0.14
 - **RLHF/DPO models** (Llama, Qwen): Policy Δ ~+0.30, gap ~0.37
 
-SFT alone creates some entanglement, but preference optimization significantly amplifies the effect.
+**Probe transfer confirms the mechanism.** Training a probe on base and testing on instruct:
 
-### Entanglement Analysis Functions (`analysis/entanglement.py`)
+| Model | Training | Factual Transfer | Policy Transfer | Gap |
+|-------|----------|------------------|-----------------|-----|
+| Qwen | SFT + DPO + GRPO | 0.821 | 0.382 | **+0.44** |
+| Llama | SFT + RLHF + DPO | 0.879 | 0.591 | **+0.29** |
+| Mistral | SFT only | 0.252 | 0.650 | -0.40 |
+| Yi | SFT only | 0.668 | 0.429 | +0.24 |
 
+- **RLHF/DPO models**: Selective preservation - factual representations transfer well (~85%), policy representations warped (~49%)
+- **SFT-only models**: Unpredictable restructuring - Mistral shows representational *inversion* (1-acc = 0.75), Yi shows uniform degradation
+
+### Entanglement Analysis Functions
+
+**`analysis/entanglement.py`:**
 - `probe_confidence_by_category()` - Probe confidence (max probability) per category
 - `probe_confidence_layerwise()` - Layer-wise probe confidence analysis
 - `bootstrap_confidence_intervals()` - Statistical rigor for error rate comparisons
@@ -190,6 +201,9 @@ SFT alone creates some entanglement, but preference optimization significantly a
 - `activation_similarity_by_category()` - Cosine similarity between category centroids
 - `compare_activation_similarity()` - Track similarity changes after fine-tuning
 - `compare_base_instruct_entanglement()` - Full base vs instruct comparison
+
+**`analysis/comparison.py`:**
+- `transfer_by_category()` - Probe transfer from base→instruct broken down by category
 
 ### Alignment Implications
 
