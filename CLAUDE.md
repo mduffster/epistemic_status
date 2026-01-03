@@ -86,7 +86,12 @@ python run_analysis.py --model qwen_base --compare qwen_instruct --analysis enta
 
 # Full suite with plots
 python run_analysis.py --model qwen_base --analysis all --save_plots
+
+# Significance testing (sample-level + per-category with FDR correction)
+python run_analysis.py --model qwen_base --compare qwen_instruct --analysis significance --n_permutations 100 --n_seeds 3
 ```
+
+**Important:** Run analyses sequentially, not in parallel - parallel runs consume too much memory.
 
 ### Analysis Package Structure (`analysis/`)
 - `loader.py` - Data loading, `ModelData` class

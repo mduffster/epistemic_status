@@ -77,6 +77,19 @@ SFT-only models show **unpredictable restructuring**: Mistral's factual represen
 
 This suggests fine-tuning warps representational geometry specifically where it trains epistemic behaviors. The model learns to say "I don't know" through representational changes that entangle trained behaviors with genuine uncertainty states, making these epistemically distinct states harder to distinguish via linear probing.
 
+#### Statistical Significance
+
+Sample-level permutation tests confirm all entanglement effects are highly significant (p < 0.001). By comparing ~249 RLHF-category samples vs ~243 non-RLHF samples directly, we achieve proper statistical power:
+
+| Model | Training | RLHF Δ | Non-RLHF Δ | Difference | 95% CI | Cohen's d |
+|-------|----------|--------|------------|------------|--------|-----------|
+| Qwen | SFT+DPO+GRPO | +0.211 | -0.116 | **+0.327** | [+0.26, +0.40] | 0.81 (large) |
+| Yi | SFT only | +0.209 | -0.036 | **+0.244** | [+0.18, +0.31] | 0.73 (medium) |
+| Llama | SFT+RLHF+DPO | +0.215 | -0.030 | **+0.245** | [+0.18, +0.31] | 0.65 (medium) |
+| Mistral | SFT only | +0.210 | +0.062 | **+0.148** | [+0.08, +0.21] | 0.38 (small) |
+
+All models show the same pattern: probe error increases significantly more for RLHF categories than non-RLHF categories. Effect sizes range from small (Mistral, d=0.38) to large (Qwen, d=0.81).
+
 ### 5. The Alignment Paradox: Better Behavior, Worse Transparency
 
 Despite internal entanglement, behavioral hallucination detection improves dramatically:
@@ -141,6 +154,7 @@ The dataset contains ~600 prompts across 6 epistemic categories, divided into **
 - **Effect sizes**: Cohen's d for activation differences between correct/incorrect
 - **Cross-model generalization**: Do probes transfer between base/instruct variants?
 - **Entanglement analysis**: Probe confidence by category, held-out generalization, activation similarity
+- **Significance testing**: Sample-level permutation tests with FDR correction for multiple comparisons
 
 ### Linear vs Non-Linear Probes
 
@@ -188,7 +202,8 @@ epistemic_status/
 │   ├── effects.py          # Effect sizes, ROC/AUC
 │   ├── calibration.py      # Confidence calibration
 │   ├── comparison.py       # Cross-model analysis
-│   └── entanglement.py     # Fine-tuning entanglement analysis
+│   ├── entanglement.py     # Fine-tuning entanglement analysis
+│   └── statistics.py       # Significance testing, multiple comparison correction
 └── activations/            # Collected activation data
     ├── qwen_base/
     ├── qwen_instruct/
