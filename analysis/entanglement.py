@@ -1104,8 +1104,8 @@ def run_full_significance_analysis(
     Run complete significance analysis with all P0 requirements.
 
     Includes:
-    1. Permutation/bootstrap significance tests
-    2. Multiple comparison correction (FDR)
+    1. Per-category significance tests with FDR correction
+    2. Sample-level significance test (high power alternative to category-level)
     3. Seed sensitivity analysis
 
     Args:
@@ -1128,8 +1128,8 @@ def run_full_significance_analysis(
 
     results = {}
 
-    # 1. Significance testing with correction
-    results['significance'] = test_entanglement_significance(
+    # 1. Per-category significance testing with correction
+    results['per_category'] = test_entanglement_significance(
         base_data, instruct_data, position,
         n_permutations=n_permutations,
         n_bootstrap=n_permutations,
@@ -1139,7 +1139,17 @@ def run_full_significance_analysis(
 
     _cleanup()
 
-    # 2. Seed sensitivity
+    # 2. Sample-level significance test (high power)
+    results['sample_level'] = test_entanglement_sample_level(
+        base_data, instruct_data, position,
+        n_permutations=n_permutations * 10,  # More permutations for main test
+        n_cv_splits=min(n_permutations, 100),  # Cap CV splits for speed
+        print_output=print_output
+    )
+
+    _cleanup()
+
+    # 3. Seed sensitivity
     results['sensitivity'] = run_entanglement_seed_sensitivity(
         base_data, instruct_data, position,
         n_seeds=n_seeds,
@@ -1148,37 +1158,264 @@ def run_full_significance_analysis(
 
     _cleanup()
 
-    # 3. Summary
+    # 4. Summary
     if print_output:
         print("\n" + "=" * 80)
         print("ANALYSIS SUMMARY")
         print("=" * 80)
 
-        # Key finding significance
-        sig_results = results['significance']
-        if 'group_comparison' in sig_results and sig_results['group_comparison']:
-            gc = sig_results['group_comparison']
-            print(f"\n1. RLHF vs Non-RLHF degradation difference:")
-            print(f"   Difference: {gc['group_difference']:+.4f}")
-            print(f"   p-value: {gc['p_value']:.4f}")
-            print(f"   Effect size: {gc['effect_size']:.3f}")
-            sig_str = "✓ SIGNIFICANT" if gc['significant'] else "✗ Not significant"
-            print(f"   Result: {sig_str}")
+        # Sample-level result (main finding)
+        sl = results['sample_level']
+        print(f"\n1. SAMPLE-LEVEL TEST (n={sl['n_rlhf_samples']} vs {sl['n_nonrlhf_samples']}):")
+        print(f"   RLHF error change:     {sl['rlhf_mean_change']:+.4f}")
+        print(f"   Non-RLHF error change: {sl['nonrlhf_mean_change']:+.4f}")
+        print(f"   Difference:            {sl['observed_difference']:+.4f}")
+        print(f"   95% CI: [{sl['ci_low']:+.4f}, {sl['ci_high']:+.4f}]")
+        print(f"   Cohen's d: {sl['cohens_d']:.3f}")
+        print(f"   p-value: {sl['p_value']:.6f}")
+        sig_str = "✓ SIGNIFICANT" if sl['significant'] else "✗ Not significant"
+        print(f"   Result: {sig_str}")
 
-        # Corrected results
-        if sig_results['corrected_results']:
-            cr = sig_results['corrected_results']
-            print(f"\n2. Multiple comparison correction ({cr['method']}):")
-            print(f"   Tests significant after correction: {cr['n_significant']}/{cr['n_tests']}")
+        # Per-category corrected results
+        pc = results['per_category']
+        if pc['corrected_results']:
+            cr = pc['corrected_results']
+            print(f"\n2. PER-CATEGORY TESTS (FDR corrected):")
+            print(f"   Significant after correction: {cr['n_significant']}/{cr['n_tests']}")
+
+        # Category-level group comparison (note the limitation)
+        if 'group_comparison' in pc and pc['group_comparison']:
+            gc = pc['group_comparison']
+            print(f"\n3. CATEGORY-LEVEL GROUP TEST (n=3 vs n=3, low power):")
+            print(f"   Effect size: {gc['effect_size']:.3f}")
+            print(f"   p-value: {gc['p_value']:.4f} (note: min possible is 0.05)")
 
         # Sensitivity
         sens = results['sensitivity']
         if 'entanglement' in sens:
             ent = sens['entanglement']
-            print(f"\n3. Seed sensitivity (CV < 5% = stable):")
+            print(f"\n4. SEED SENSITIVITY (CV < 5% = stable):")
             for metric, stable in ent.is_stable.items():
                 status = "✓ stable" if stable else "⚠ unstable"
                 cv = ent.summary[metric]['cv']
                 print(f"   {metric}: CV={cv:.1%} ({status})")
 
     return results
+
+
+# =============================================================================
+# SAMPLE-LEVEL SIGNIFICANCE TEST (High Power Alternative)
+# =============================================================================
+
+def test_entanglement_sample_level(
+    base_data: ModelData,
+    instruct_data: ModelData,
+    position: str = 'last',
+    n_permutations: int = 10000,
+    n_cv_splits: int = 100,
+    print_output: bool = True
+) -> Dict:
+    """
+    Sample-level significance test for RLHF vs non-RLHF entanglement.
+
+    Instead of comparing 3 category means vs 3 category means (underpowered),
+    this test compares ~300 RLHF samples vs ~300 non-RLHF samples directly.
+
+    Method:
+    1. For each sample, estimate probe error using repeated train/test splits
+    2. Compute per-sample "error change" = instruct_error - base_error
+    3. Compare error change distribution between RLHF and non-RLHF samples
+    4. Use permutation test for significance (now with n >> 3)
+
+    Args:
+        base_data: ModelData for base model
+        instruct_data: ModelData for instruct model
+        position: Token position
+        n_permutations: Number of permutations for test
+        n_cv_splits: Number of CV splits to estimate per-sample error
+        print_output: Whether to print results
+
+    Returns:
+        Dictionary with sample-level significance results
+    """
+    if print_output:
+        print("\n" + "=" * 70)
+        print("SAMPLE-LEVEL ENTANGLEMENT SIGNIFICANCE TEST")
+        print("=" * 70)
+        print(f"Base: {base_data.name} | Instruct: {instruct_data.name}")
+        print(f"This test has much higher power than category-level (n >> 3)")
+
+    # Get activations and labels
+    X_base = get_activation_matrix(base_data, position)
+    y_base = base_data.df['correct'].values.astype(int)
+    cats_base = base_data.df['category'].values
+
+    X_inst = get_activation_matrix(instruct_data, position)
+    y_inst = instruct_data.df['correct'].values.astype(int)
+    cats_inst = instruct_data.df['category'].values
+
+    # Compute per-sample error estimates using repeated CV
+    if print_output:
+        print(f"\nEstimating per-sample probe errors ({n_cv_splits} CV splits)...")
+
+    base_sample_errors = _get_sample_errors(X_base, y_base, n_splits=n_cv_splits)
+    inst_sample_errors = _get_sample_errors(X_inst, y_inst, n_splits=n_cv_splits)
+
+    # Compute per-sample error change (instruct - base)
+    # Note: samples are in same order in both datasets
+    error_change = inst_sample_errors - base_sample_errors
+
+    # Assign samples to RLHF vs non-RLHF groups
+    is_rlhf = np.array([cat in RLHF_CATEGORIES for cat in cats_base])
+    is_nonrlhf = np.array([cat in NON_RLHF_CATEGORIES for cat in cats_base])
+
+    rlhf_changes = error_change[is_rlhf]
+    nonrlhf_changes = error_change[is_nonrlhf]
+
+    n_rlhf = len(rlhf_changes)
+    n_nonrlhf = len(nonrlhf_changes)
+
+    if print_output:
+        print(f"\nSample sizes:")
+        print(f"  RLHF categories:     n = {n_rlhf}")
+        print(f"  Non-RLHF categories: n = {n_nonrlhf}")
+
+    # Observed effect
+    observed_diff = rlhf_changes.mean() - nonrlhf_changes.mean()
+
+    # Permutation test
+    if print_output:
+        print(f"\nRunning permutation test ({n_permutations} permutations)...")
+
+    # Combine for permutation
+    combined = np.concatenate([rlhf_changes, nonrlhf_changes])
+    rng = np.random.RandomState(42)
+
+    perm_diffs = np.zeros(n_permutations)
+    for i in range(n_permutations):
+        perm = rng.permutation(combined)
+        perm_rlhf = perm[:n_rlhf]
+        perm_nonrlhf = perm[n_rlhf:]
+        perm_diffs[i] = perm_rlhf.mean() - perm_nonrlhf.mean()
+
+    # One-sided p-value (RLHF expected to be higher)
+    p_value = np.mean(perm_diffs >= observed_diff)
+
+    # Effect size (Cohen's d)
+    pooled_std = np.sqrt(
+        ((n_rlhf - 1) * rlhf_changes.var() + (n_nonrlhf - 1) * nonrlhf_changes.var())
+        / (n_rlhf + n_nonrlhf - 2)
+    )
+    cohens_d = observed_diff / pooled_std if pooled_std > 0 else 0
+
+    # Bootstrap CI for the difference
+    boot_diffs = []
+    for _ in range(2000):
+        boot_rlhf = rng.choice(rlhf_changes, size=n_rlhf, replace=True)
+        boot_nonrlhf = rng.choice(nonrlhf_changes, size=n_nonrlhf, replace=True)
+        boot_diffs.append(boot_rlhf.mean() - boot_nonrlhf.mean())
+    ci_low, ci_high = np.percentile(boot_diffs, [2.5, 97.5])
+
+    results = {
+        'n_rlhf_samples': n_rlhf,
+        'n_nonrlhf_samples': n_nonrlhf,
+        'rlhf_mean_change': float(rlhf_changes.mean()),
+        'nonrlhf_mean_change': float(nonrlhf_changes.mean()),
+        'observed_difference': float(observed_diff),
+        'p_value': float(p_value),
+        'cohens_d': float(cohens_d),
+        'ci_low': float(ci_low),
+        'ci_high': float(ci_high),
+        'significant': p_value < 0.05,
+        'n_permutations': n_permutations
+    }
+
+    if print_output:
+        print(f"\n--- Results ---")
+        print(f"RLHF mean error change:     {rlhf_changes.mean():+.4f}")
+        print(f"Non-RLHF mean error change: {nonrlhf_changes.mean():+.4f}")
+        print(f"Difference (RLHF - NonRLHF): {observed_diff:+.4f}")
+        print(f"95% CI: [{ci_low:+.4f}, {ci_high:+.4f}]")
+        print(f"Cohen's d: {cohens_d:.3f}")
+        print(f"p-value (one-sided): {p_value:.6f}")
+
+        if p_value < 0.001:
+            sig_str = "*** HIGHLY SIGNIFICANT (p < 0.001)"
+        elif p_value < 0.01:
+            sig_str = "** SIGNIFICANT (p < 0.01)"
+        elif p_value < 0.05:
+            sig_str = "* SIGNIFICANT (p < 0.05)"
+        else:
+            sig_str = "Not significant"
+        print(f"Result: {sig_str}")
+
+        # Interpretation
+        if results['significant']:
+            print(f"\n✓ RLHF category samples show significantly greater probe error")
+            print(f"  increase than non-RLHF samples after instruct tuning.")
+            if cohens_d >= 0.8:
+                print(f"  Effect size is LARGE (d = {cohens_d:.2f}).")
+            elif cohens_d >= 0.5:
+                print(f"  Effect size is MEDIUM (d = {cohens_d:.2f}).")
+            else:
+                print(f"  Effect size is SMALL (d = {cohens_d:.2f}).")
+
+    return results
+
+
+def _get_sample_errors(
+    X: np.ndarray,
+    y: np.ndarray,
+    n_splits: int = 100,
+    test_size: float = 0.2
+) -> np.ndarray:
+    """
+    Estimate per-sample probe error using repeated train/test splits.
+
+    For each sample, returns the average error rate when that sample
+    was in the test set across all splits.
+
+    Args:
+        X: Feature matrix
+        y: Labels
+        n_splits: Number of train/test splits
+        test_size: Fraction for test set
+
+    Returns:
+        Array of per-sample error estimates
+    """
+    n_samples = len(y)
+    error_counts = np.zeros(n_samples)
+    appear_counts = np.zeros(n_samples)
+
+    for seed in range(n_splits):
+        rs = 42 + seed
+
+        # Split
+        indices = np.arange(n_samples)
+        X_train, X_test, y_train, y_test, idx_train, idx_test = train_test_split(
+            X, y, indices, test_size=test_size, random_state=rs, stratify=y
+        )
+
+        # Train probe
+        scaler = StandardScaler()
+        X_train_s = scaler.fit_transform(X_train)
+        X_test_s = scaler.transform(X_test)
+
+        clf = LogisticRegression(max_iter=1000, random_state=rs)
+        clf.fit(X_train_s, y_train)
+
+        # Record errors for test samples
+        preds = clf.predict(X_test_s)
+        errors = (preds != y_test).astype(float)
+
+        for i, idx in enumerate(idx_test):
+            error_counts[idx] += errors[i]
+            appear_counts[idx] += 1
+
+    # Average error rate for each sample
+    # Avoid division by zero for samples that never appeared in test set
+    appear_counts = np.maximum(appear_counts, 1)
+    sample_errors = error_counts / appear_counts
+
+    return sample_errors
