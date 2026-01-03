@@ -591,7 +591,7 @@ def activation_similarity_by_category(
     return results
 
 
-def compare_activation_similarity(
+def compare_activation_similarity_legacy(
     base_data: ModelData,
     instruct_data: ModelData,
     position: str = 'last',
@@ -674,5 +674,491 @@ def compare_activation_similarity(
         print(f"  → toward uncertain_correct:    {toward_uncertain:+.3f}")
         print(f"  ← away from confident_correct: {away_confident:+.3f}")
         print(f"  Net direction:                 {net_direction:+.3f} ({results['direction_analysis']['interpretation']})")
+
+    return results
+
+
+# Alias for backwards compatibility
+compare_activation_similarity = compare_activation_similarity_legacy
+
+
+# =============================================================================
+# RIGOROUS STATISTICAL TESTING (NEW)
+# =============================================================================
+
+from .statistics import (
+    permutation_test,
+    bootstrap_paired_test,
+    probe_permutation_test,
+    correct_multiple_comparisons,
+    run_seed_sensitivity,
+    summarize_significance,
+    SignificanceResult,
+)
+
+
+def test_entanglement_significance(
+    base_data: ModelData,
+    instruct_data: ModelData,
+    position: str = 'last',
+    n_permutations: int = 1000,
+    n_bootstrap: int = 1000,
+    correction_method: str = 'fdr_bh',
+    print_output: bool = True
+) -> Dict:
+    """
+    Rigorous significance testing for entanglement claims.
+
+    Tests:
+    1. Is there a significant difference in probe error between base/instruct per category?
+    2. Is RLHF category degradation significantly greater than non-RLHF?
+    3. Multiple comparison correction across all tests
+
+    Args:
+        base_data: ModelData for base model
+        instruct_data: ModelData for instruct model
+        position: Token position
+        n_permutations: Number of permutations for significance tests
+        n_bootstrap: Number of bootstrap iterations
+        correction_method: 'bonferroni', 'holm', 'fdr_bh', or 'fdr_by'
+        print_output: Whether to print results
+
+    Returns:
+        Dictionary with significance test results
+    """
+    if print_output:
+        print("\n" + "=" * 70)
+        print("ENTANGLEMENT SIGNIFICANCE TESTING")
+        print("=" * 70)
+        print(f"Base: {base_data.name} | Instruct: {instruct_data.name}")
+        print(f"Permutations: {n_permutations} | Bootstrap: {n_bootstrap}")
+        print(f"Correction: {correction_method}")
+
+    results = {
+        'per_category': {},
+        'group_comparison': {},
+        'corrected_results': None
+    }
+
+    # Get probe error rates for each category across multiple seeds
+    base_errors_by_cat = _get_category_errors_multi_seed(
+        base_data, position, n_seeds=n_bootstrap
+    )
+    inst_errors_by_cat = _get_category_errors_multi_seed(
+        instruct_data, position, n_seeds=n_bootstrap
+    )
+
+    # Test 1: Per-category significance (base vs instruct error rate)
+    if print_output:
+        print(f"\n--- Per-Category Tests (Base vs Instruct Error Rate) ---")
+        print(f"{'Category':<20} {'Base Err':>10} {'Inst Err':>10} {'Diff':>10} {'p-value':>10} {'Sig':>5}")
+        print("-" * 70)
+
+    all_tests = {}
+
+    for cat in CATEGORIES:
+        if cat in base_errors_by_cat and cat in inst_errors_by_cat:
+            base_errs = np.array(base_errors_by_cat[cat])
+            inst_errs = np.array(inst_errors_by_cat[cat])
+
+            # Paired bootstrap test (same seeds, different models)
+            sig_result = bootstrap_paired_test(
+                inst_errs, base_errs,  # inst - base (positive = instruct worse)
+                n_bootstrap=n_bootstrap,
+                random_state=42
+            )
+
+            results['per_category'][cat] = {
+                'base_mean': base_errs.mean(),
+                'instruct_mean': inst_errs.mean(),
+                'difference': sig_result.statistic,
+                'p_value': sig_result.p_value,
+                'ci_low': sig_result.ci_low,
+                'ci_high': sig_result.ci_high,
+                'effect_size': sig_result.effect_size,
+                'significant_uncorrected': sig_result.significant
+            }
+
+            all_tests[f'cat_{cat}'] = sig_result
+
+            if print_output:
+                sig_str = "*" if sig_result.p_value < 0.05 else ""
+                print(f"{cat:<20} {base_errs.mean():>10.3f} {inst_errs.mean():>10.3f} "
+                      f"{sig_result.statistic:>+10.3f} {sig_result.p_value:>10.4f} {sig_str:>5}")
+
+    # Test 2: RLHF vs Non-RLHF group comparison
+    if print_output:
+        print(f"\n--- Group Comparison (RLHF vs Non-RLHF Categories) ---")
+
+    # Compute deltas (instruct - base error) for each category
+    rlhf_deltas = []
+    non_rlhf_deltas = []
+
+    for cat in CATEGORIES:
+        if cat in results['per_category']:
+            delta = results['per_category'][cat]['difference']
+            if cat in RLHF_CATEGORIES:
+                rlhf_deltas.append(delta)
+            elif cat in NON_RLHF_CATEGORIES:
+                non_rlhf_deltas.append(delta)
+
+    if len(rlhf_deltas) > 0 and len(non_rlhf_deltas) > 0:
+        rlhf_deltas = np.array(rlhf_deltas)
+        non_rlhf_deltas = np.array(non_rlhf_deltas)
+
+        # Permutation test: is RLHF degradation > non-RLHF degradation?
+        group_test = permutation_test(
+            rlhf_deltas, non_rlhf_deltas,
+            statistic='mean_diff',
+            n_permutations=n_permutations,
+            alternative='greater',  # RLHF expected to be higher
+            random_state=42
+        )
+
+        results['group_comparison'] = {
+            'rlhf_mean_delta': rlhf_deltas.mean(),
+            'non_rlhf_mean_delta': non_rlhf_deltas.mean(),
+            'group_difference': group_test.statistic,
+            'p_value': group_test.p_value,
+            'effect_size': group_test.effect_size,
+            'significant': group_test.significant
+        }
+
+        all_tests['rlhf_vs_nonrlhf'] = group_test
+
+        if print_output:
+            print(f"RLHF categories mean Δ:     {rlhf_deltas.mean():+.4f}")
+            print(f"Non-RLHF categories mean Δ: {non_rlhf_deltas.mean():+.4f}")
+            print(f"Difference (RLHF - NonRLHF): {group_test.statistic:+.4f}")
+            print(f"p-value (one-sided):         {group_test.p_value:.4f}")
+            print(f"Effect size (Cohen's d):     {group_test.effect_size:.3f}")
+            sig_str = "SIGNIFICANT" if group_test.significant else "not significant"
+            print(f"Result: {sig_str} at α=0.05")
+
+    # Test 3: Multiple comparison correction
+    if print_output:
+        print(f"\n--- Multiple Comparison Correction ({correction_method}) ---")
+
+    p_values = np.array([t.p_value for t in all_tests.values()])
+    labels = list(all_tests.keys())
+
+    corrected = correct_multiple_comparisons(
+        p_values, method=correction_method, labels=labels, print_output=print_output
+    )
+
+    results['corrected_results'] = {
+        'method': correction_method,
+        'n_tests': corrected.n_tests,
+        'n_significant': corrected.n_significant,
+        'corrected_p_values': dict(zip(labels, corrected.corrected_p_values)),
+        'significant_after_correction': dict(zip(labels, corrected.significant))
+    }
+
+    # Summary
+    if print_output:
+        print(f"\n--- Summary ---")
+        n_sig_uncorrected = sum(1 for t in all_tests.values() if t.significant)
+        print(f"Tests significant before correction: {n_sig_uncorrected}/{len(all_tests)}")
+        print(f"Tests significant after correction:  {corrected.n_significant}/{corrected.n_tests}")
+
+    return results
+
+
+def test_category_probe_difference(
+    data: ModelData,
+    category1: str,
+    category2: str,
+    position: str = 'last',
+    n_permutations: int = 1000,
+    print_output: bool = True
+) -> SignificanceResult:
+    """
+    Test if probe performance differs significantly between two categories.
+
+    Args:
+        data: ModelData object
+        category1: First category name
+        category2: Second category name
+        position: Token position
+        n_permutations: Number of permutations
+        print_output: Whether to print results
+
+    Returns:
+        SignificanceResult for the comparison
+    """
+    X = get_activation_matrix(data, position)
+    y = data.df['correct'].values.astype(int)
+    categories = data.df['category'].values
+
+    result = probe_permutation_test(
+        X, y, categories, category1, category2,
+        metric='accuracy',
+        n_permutations=n_permutations,
+        random_state=42
+    )
+
+    if print_output:
+        print(f"\n--- Probe Difference: {category1} vs {category2} ---")
+        print(f"Observed difference: {result.statistic:+.4f}")
+        print(f"p-value: {result.p_value:.4f}")
+        print(f"95% CI: [{result.ci_low:.4f}, {result.ci_high:.4f}]")
+        sig_str = "SIGNIFICANT" if result.significant else "not significant"
+        print(f"Result: {sig_str}")
+
+    return result
+
+
+def run_entanglement_seed_sensitivity(
+    base_data: ModelData,
+    instruct_data: ModelData,
+    position: str = 'last',
+    n_seeds: int = 5,
+    print_output: bool = True
+) -> Dict:
+    """
+    Run seed sensitivity analysis for entanglement metrics.
+
+    Tests whether key findings are stable across random seeds.
+
+    Args:
+        base_data: ModelData for base model
+        instruct_data: ModelData for instruct model
+        position: Token position
+        n_seeds: Number of seeds to test
+        print_output: Whether to print results
+
+    Returns:
+        Dictionary with sensitivity results
+    """
+    if print_output:
+        print("\n" + "=" * 70)
+        print("SEED SENSITIVITY ANALYSIS")
+        print("=" * 70)
+        print(f"Testing stability with {n_seeds} random seeds")
+
+    X_base = get_activation_matrix(base_data, position)
+    y_base = base_data.df['correct'].values.astype(int)
+
+    X_inst = get_activation_matrix(instruct_data, position)
+    y_inst = instruct_data.df['correct'].values.astype(int)
+
+    # Test probe accuracy stability
+    if print_output:
+        print("\n--- Base Model Probe Stability ---")
+
+    from .statistics import run_probe_seed_sensitivity
+    base_sensitivity = run_probe_seed_sensitivity(
+        X_base, y_base, n_seeds=n_seeds, print_output=print_output
+    )
+
+    if print_output:
+        print("\n--- Instruct Model Probe Stability ---")
+
+    inst_sensitivity = run_probe_seed_sensitivity(
+        X_inst, y_inst, n_seeds=n_seeds, print_output=print_output
+    )
+
+    # Test entanglement metric stability
+    if print_output:
+        print("\n--- Entanglement Metrics Stability ---")
+
+    def compute_entanglement_metrics(random_state, print_output=False):
+        """Compute key entanglement metrics for a given seed."""
+        # Get error rates per category for base
+        base_errs = {}
+        inst_errs = {}
+
+        for cat in CATEGORIES:
+            base_mask = base_data.df['category'] == cat
+            inst_mask = instruct_data.df['category'] == cat
+
+            if base_mask.sum() > 5 and inst_mask.sum() > 5:
+                # Train probe on base, get error on category
+                X_b = X_base[base_mask]
+                y_b = y_base[base_mask]
+
+                from sklearn.model_selection import train_test_split
+                X_tr, X_te, y_tr, y_te = train_test_split(
+                    X_b, y_b, test_size=0.3, random_state=random_state, stratify=y_b
+                )
+
+                scaler = StandardScaler()
+                X_tr_s = scaler.fit_transform(X_tr)
+                X_te_s = scaler.transform(X_te)
+
+                clf = LogisticRegression(max_iter=1000, random_state=random_state)
+                clf.fit(X_tr_s, y_tr)
+                base_errs[cat] = 1 - clf.score(X_te_s, y_te)
+
+                # Same for instruct
+                X_i = X_inst[inst_mask]
+                y_i = y_inst[inst_mask]
+
+                X_tr, X_te, y_tr, y_te = train_test_split(
+                    X_i, y_i, test_size=0.3, random_state=random_state, stratify=y_i
+                )
+
+                scaler = StandardScaler()
+                X_tr_s = scaler.fit_transform(X_tr)
+                X_te_s = scaler.transform(X_te)
+
+                clf = LogisticRegression(max_iter=1000, random_state=random_state)
+                clf.fit(X_tr_s, y_tr)
+                inst_errs[cat] = 1 - clf.score(X_te_s, y_te)
+
+        # Compute summary metrics
+        rlhf_delta = np.mean([inst_errs[c] - base_errs[c] for c in RLHF_CATEGORIES if c in inst_errs])
+        nonrlhf_delta = np.mean([inst_errs[c] - base_errs[c] for c in NON_RLHF_CATEGORIES if c in inst_errs])
+
+        return {
+            'rlhf_delta': rlhf_delta,
+            'nonrlhf_delta': nonrlhf_delta,
+            'delta_gap': rlhf_delta - nonrlhf_delta
+        }
+
+    entanglement_sensitivity = run_seed_sensitivity(
+        compute_entanglement_metrics,
+        n_seeds=n_seeds,
+        print_output=print_output
+    )
+
+    return {
+        'base_probe': base_sensitivity,
+        'instruct_probe': inst_sensitivity,
+        'entanglement': entanglement_sensitivity
+    }
+
+
+def _get_category_errors_multi_seed(
+    data: ModelData,
+    position: str,
+    n_seeds: int = 100,
+    test_size: float = 0.2
+) -> Dict[str, List[float]]:
+    """
+    Get probe error rates per category across multiple seeds.
+
+    Helper function for significance testing.
+    """
+    X = get_activation_matrix(data, position)
+    y = data.df['correct'].values.astype(int)
+    categories = data.df['category'].values
+
+    errors_by_cat = {cat: [] for cat in CATEGORIES}
+
+    for seed in range(n_seeds):
+        rs = 42 + seed
+
+        X_train, X_test, y_train, y_test, _, idx_test = train_test_split(
+            X, y, np.arange(len(y)), test_size=test_size, random_state=rs, stratify=y
+        )
+
+        scaler = StandardScaler()
+        X_train_s = scaler.fit_transform(X_train)
+        X_test_s = scaler.transform(X_test)
+
+        clf = LogisticRegression(max_iter=1000, random_state=rs)
+        clf.fit(X_train_s, y_train)
+
+        preds = clf.predict(X_test_s)
+        errors = preds != y_test
+        test_cats = categories[idx_test]
+
+        for cat in CATEGORIES:
+            mask = test_cats == cat
+            if mask.sum() > 0:
+                errors_by_cat[cat].append(errors[mask].mean())
+
+    return errors_by_cat
+
+
+def run_full_significance_analysis(
+    base_data: ModelData,
+    instruct_data: ModelData,
+    position: str = 'last',
+    n_permutations: int = 1000,
+    n_seeds: int = 5,
+    print_output: bool = True
+) -> Dict:
+    """
+    Run complete significance analysis with all P0 requirements.
+
+    Includes:
+    1. Permutation/bootstrap significance tests
+    2. Multiple comparison correction (FDR)
+    3. Seed sensitivity analysis
+
+    Args:
+        base_data: ModelData for base model
+        instruct_data: ModelData for instruct model
+        position: Token position
+        n_permutations: Number of permutations
+        n_seeds: Number of seeds for sensitivity
+        print_output: Whether to print results
+
+    Returns:
+        Dictionary with all analysis results
+    """
+    if print_output:
+        print("\n" + "=" * 80)
+        print("COMPLETE SIGNIFICANCE ANALYSIS")
+        print("=" * 80)
+        print(f"Base: {base_data.name}")
+        print(f"Instruct: {instruct_data.name}")
+
+    results = {}
+
+    # 1. Significance testing with correction
+    results['significance'] = test_entanglement_significance(
+        base_data, instruct_data, position,
+        n_permutations=n_permutations,
+        n_bootstrap=n_permutations,
+        correction_method='fdr_bh',
+        print_output=print_output
+    )
+
+    _cleanup()
+
+    # 2. Seed sensitivity
+    results['sensitivity'] = run_entanglement_seed_sensitivity(
+        base_data, instruct_data, position,
+        n_seeds=n_seeds,
+        print_output=print_output
+    )
+
+    _cleanup()
+
+    # 3. Summary
+    if print_output:
+        print("\n" + "=" * 80)
+        print("ANALYSIS SUMMARY")
+        print("=" * 80)
+
+        # Key finding significance
+        sig_results = results['significance']
+        if 'group_comparison' in sig_results and sig_results['group_comparison']:
+            gc = sig_results['group_comparison']
+            print(f"\n1. RLHF vs Non-RLHF degradation difference:")
+            print(f"   Difference: {gc['group_difference']:+.4f}")
+            print(f"   p-value: {gc['p_value']:.4f}")
+            print(f"   Effect size: {gc['effect_size']:.3f}")
+            sig_str = "✓ SIGNIFICANT" if gc['significant'] else "✗ Not significant"
+            print(f"   Result: {sig_str}")
+
+        # Corrected results
+        if sig_results['corrected_results']:
+            cr = sig_results['corrected_results']
+            print(f"\n2. Multiple comparison correction ({cr['method']}):")
+            print(f"   Tests significant after correction: {cr['n_significant']}/{cr['n_tests']}")
+
+        # Sensitivity
+        sens = results['sensitivity']
+        if 'entanglement' in sens:
+            ent = sens['entanglement']
+            print(f"\n3. Seed sensitivity (CV < 5% = stable):")
+            for metric, stable in ent.is_stable.items():
+                status = "✓ stable" if stable else "⚠ unstable"
+                cv = ent.summary[metric]['cv']
+                print(f"   {metric}: CV={cv:.1%} ({status})")
 
     return results

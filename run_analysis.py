@@ -48,6 +48,10 @@ from analysis.entanglement import (
     run_full_entanglement_analysis,
     activation_similarity_by_category,
     compare_activation_similarity,
+    # New rigorous statistical testing
+    test_entanglement_significance,
+    run_entanglement_seed_sensitivity,
+    run_full_significance_analysis,
 )
 from analysis.plotting import (
     plot_entropy_distributions,
@@ -209,6 +213,29 @@ def run_entanglement_comparison(data1, data2, n_bootstrap=50):
     return results
 
 
+def run_significance_analysis(data1, data2, n_permutations=1000, n_seeds=5):
+    """Run full significance analysis with P0 statistical rigor.
+
+    Includes:
+    - Permutation/bootstrap significance tests with p-values
+    - Multiple comparison correction (FDR)
+    - Seed sensitivity analysis
+    """
+    print("\n" + "=" * 60)
+    print(f"SIGNIFICANCE ANALYSIS: {data1.name} vs {data2.name}")
+    print("=" * 60)
+
+    results = run_full_significance_analysis(
+        data1, data2,
+        n_permutations=n_permutations,
+        n_seeds=n_seeds,
+        print_output=True
+    )
+
+    save_results(results, f"{data1.name}_vs_{data2.name}_significance")
+    return results
+
+
 def main():
     parser = argparse.ArgumentParser(description="Epistemic Probing Analysis")
     parser.add_argument("--model", required=True, help="Model name (e.g., qwen_base)")
@@ -218,11 +245,15 @@ def main():
         "--analysis",
         nargs='+',
         choices=['core', 'controlled', 'layers', 'entropy', 'calibration',
-                 'effects', 'roc', 'generalization', 'entanglement', 'all'],
+                 'effects', 'roc', 'generalization', 'entanglement', 'significance', 'all'],
         default=['core'],
-        help="Analysis types to run"
+        help="Analysis types to run (significance requires --compare)"
     )
     parser.add_argument("--save_plots", action="store_true", help="Save plots to files")
+    parser.add_argument("--n_permutations", type=int, default=1000,
+                        help="Number of permutations for significance tests")
+    parser.add_argument("--n_seeds", type=int, default=5,
+                        help="Number of seeds for sensitivity analysis")
 
     args = parser.parse_args()
 
@@ -231,7 +262,7 @@ def main():
         args.analysis = ['core', 'controlled', 'layers', 'entropy',
                          'calibration', 'effects', 'roc', 'entanglement']
         if args.compare:
-            args.analysis.append('generalization')
+            args.analysis.extend(['generalization', 'significance'])
 
     # Load primary model
     print(f"\n{'=' * 60}")
@@ -285,6 +316,13 @@ def main():
 
         if 'entanglement' in args.analysis:
             run_entanglement_comparison(data, data2)
+
+        if 'significance' in args.analysis:
+            run_significance_analysis(
+                data, data2,
+                n_permutations=args.n_permutations,
+                n_seeds=args.n_seeds
+            )
 
         # If layers analysis was run, also compare layers
         if 'layers' in args.analysis:
