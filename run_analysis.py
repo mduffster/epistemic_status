@@ -77,6 +77,9 @@ def save_results(results: dict, name: str):
             return {k: convert(v) for k, v in obj.items()}
         if isinstance(obj, list):
             return [convert(v) for v in obj]
+        # Handle dataclasses (like SeedSensitivityResult, SignificanceResult)
+        if hasattr(obj, '__dataclass_fields__'):
+            return convert({k: getattr(obj, k) for k in obj.__dataclass_fields__})
         return obj
 
     results_clean = convert(results)

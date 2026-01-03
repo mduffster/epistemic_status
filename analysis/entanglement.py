@@ -972,43 +972,63 @@ def run_entanglement_seed_sensitivity(
             base_mask = base_data.df['category'] == cat
             inst_mask = instruct_data.df['category'] == cat
 
-            if base_mask.sum() > 5 and inst_mask.sum() > 5:
-                # Train probe on base, get error on category
-                X_b = X_base[base_mask]
-                y_b = y_base[base_mask]
+            if base_mask.sum() > 10 and inst_mask.sum() > 10:
+                try:
+                    # Train probe on base, get error on category
+                    X_b = X_base[base_mask]
+                    y_b = y_base[base_mask]
 
-                from sklearn.model_selection import train_test_split
-                X_tr, X_te, y_tr, y_te = train_test_split(
-                    X_b, y_b, test_size=0.3, random_state=random_state, stratify=y_b
-                )
+                    # Check we have enough samples of each class for stratified split
+                    unique, counts = np.unique(y_b, return_counts=True)
+                    if len(unique) < 2 or np.min(counts) < 3:
+                        continue
 
-                scaler = StandardScaler()
-                X_tr_s = scaler.fit_transform(X_tr)
-                X_te_s = scaler.transform(X_te)
+                    from sklearn.model_selection import train_test_split
+                    X_tr, X_te, y_tr, y_te = train_test_split(
+                        X_b, y_b, test_size=0.3, random_state=random_state, stratify=y_b
+                    )
 
-                clf = LogisticRegression(max_iter=1000, random_state=random_state)
-                clf.fit(X_tr_s, y_tr)
-                base_errs[cat] = 1 - clf.score(X_te_s, y_te)
+                    scaler = StandardScaler()
+                    X_tr_s = scaler.fit_transform(X_tr)
+                    X_te_s = scaler.transform(X_te)
 
-                # Same for instruct
-                X_i = X_inst[inst_mask]
-                y_i = y_inst[inst_mask]
+                    clf = LogisticRegression(max_iter=1000, random_state=random_state)
+                    clf.fit(X_tr_s, y_tr)
+                    base_errs[cat] = 1 - clf.score(X_te_s, y_te)
 
-                X_tr, X_te, y_tr, y_te = train_test_split(
-                    X_i, y_i, test_size=0.3, random_state=random_state, stratify=y_i
-                )
+                    # Same for instruct
+                    X_i = X_inst[inst_mask]
+                    y_i = y_inst[inst_mask]
 
-                scaler = StandardScaler()
-                X_tr_s = scaler.fit_transform(X_tr)
-                X_te_s = scaler.transform(X_te)
+                    # Check we have enough samples of each class
+                    unique, counts = np.unique(y_i, return_counts=True)
+                    if len(unique) < 2 or np.min(counts) < 3:
+                        continue
 
-                clf = LogisticRegression(max_iter=1000, random_state=random_state)
-                clf.fit(X_tr_s, y_tr)
-                inst_errs[cat] = 1 - clf.score(X_te_s, y_te)
+                    X_tr, X_te, y_tr, y_te = train_test_split(
+                        X_i, y_i, test_size=0.3, random_state=random_state, stratify=y_i
+                    )
+
+                    scaler = StandardScaler()
+                    X_tr_s = scaler.fit_transform(X_tr)
+                    X_te_s = scaler.transform(X_te)
+
+                    clf = LogisticRegression(max_iter=1000, random_state=random_state)
+                    clf.fit(X_tr_s, y_tr)
+                    inst_errs[cat] = 1 - clf.score(X_te_s, y_te)
+                except Exception:
+                    # Skip this category if there's any error
+                    continue
 
         # Compute summary metrics
-        rlhf_delta = np.mean([inst_errs[c] - base_errs[c] for c in RLHF_CATEGORIES if c in inst_errs])
-        nonrlhf_delta = np.mean([inst_errs[c] - base_errs[c] for c in NON_RLHF_CATEGORIES if c in inst_errs])
+        rlhf_available = [c for c in RLHF_CATEGORIES if c in inst_errs and c in base_errs]
+        nonrlhf_available = [c for c in NON_RLHF_CATEGORIES if c in inst_errs and c in base_errs]
+
+        if not rlhf_available or not nonrlhf_available:
+            return {'rlhf_delta': np.nan, 'nonrlhf_delta': np.nan, 'delta_gap': np.nan}
+
+        rlhf_delta = np.mean([inst_errs[c] - base_errs[c] for c in rlhf_available])
+        nonrlhf_delta = np.mean([inst_errs[c] - base_errs[c] for c in nonrlhf_available])
 
         return {
             'rlhf_delta': rlhf_delta,
