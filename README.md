@@ -8,7 +8,7 @@ We show that fine-tuning degrades the separability of epistemic states in langua
 
 ### 1. Models Hide Epistemic Information
 
-Linear probes on activations predict correctness better than output entropy alone. The gap reveals "hidden information" - uncertainty the model represents internally but doesn't surface:
+Linear probes on activations predict output correctness better than output entropy alone. The gap reveals "hidden information" or uncertainty the model accurately represents internally but fails to surface:
 
 | Model | Entropy AUC | Probe AUC | Hidden Info |
 |-------|-------------|-----------|-------------|
@@ -26,11 +26,11 @@ Yi and Llama share the same architecture but differ 4x in hidden information:
 | Llama 3.1 8B | LLaMA | English | 3.0% |
 | Yi 6B | LLaMA-derived | Chinese | 13.1% |
 
-English-trained models (Llama, Mistral) have highly informative entropy. Chinese-trained models (Qwen, Yi) hide more - the model "knows" it's uncertain but doesn't signal it through logprobs.
+English-trained models (Llama, Mistral) have highly informative entropy. Chinese-trained models (Qwen, Yi) are less informative. The models "know" they're uncertain but the signal doesn't make it to logprobs.
 
 ### 3. Fine-Tuning Degrades Epistemic Transparency
 
-Instruct tuning makes entropy *less* informative across all models:
+Instruct tuning makes entropy *less* informative across all models, regardless of methodology:
 
 | Model | Entropy (base) | Entropy (instruct) | Hidden (base) | Hidden (instruct) |
 |-------|----------------|--------------------| --------------|-------------------|
@@ -39,11 +39,9 @@ Instruct tuning makes entropy *less* informative across all models:
 | Yi | 0.825 | 0.649 | 13.1% | 22.4% |
 | Qwen | 0.788 | 0.553 | 14.6% | 20.7% |
 
-The epistemic information exists internally but is increasingly hidden from the output distribution.
+### 4. "Entanglement" Occurs Where Fine-Tuning Trains Policy Behaviors
 
-### 4. Entanglement Occurs Where Fine-Tuning Trains Policy Behaviors
-
-The critical finding: representational degradation is *selective*. Probe error rates increase specifically for **policy categories** - where fine-tuning trains epistemic behaviors - while **factual categories** remain stable or improve:
+The key finding: representational degradation is *selective*. Probe error rates increase specifically for **policy categories**, those where fine-tuning trains epistemic output behaviors, while **factual categories** remain relatively stable or improve:
 
 | Model | Training Method | Policy Δ | Factual Δ | Selective Gap |
 |-------|-----------------|----------|-----------|---------------|
@@ -58,7 +56,7 @@ The critical finding: representational degradation is *selective*. Probe error r
 - **SFT-only models** (Mistral, Yi): Policy Δ ~+0.23, gap ~0.14
 - **RLHF/DPO models** (Llama, Qwen): Policy Δ ~+0.30, gap ~0.37
 
-**Probe transfer confirms the mechanism.** Training a probe on base and testing on instruct reveals how representations change:
+**Probe transfer illustrates the mechanism.** Training a probe on base and testing on instruct reveals how representations change:
 
 | Model | Training | Factual Transfer | Policy Transfer | Gap |
 |-------|----------|------------------|-----------------|-----|
@@ -69,17 +67,17 @@ The critical finding: representational degradation is *selective*. Probe error r
 
 RLHF/DPO models show **selective preservation**: factual representations transfer well (~85%) while policy representations are warped (~49%). The base model's "correct/incorrect" structure remains intact for factual questions but is disrupted for policy questions.
 
-SFT-only models show **unpredictable restructuring**: Mistral's factual representations are actually *inverted* (1-accuracy = 0.75), while Yi shows uniform degradation. No consistent pattern.
+SFT-only models show **unpredictable restructuring**: Mistral's factual representations are actually *inverted* (1-accuracy = 0.75), while Yi shows uniform degradation. We haven't uncovered a discernible pattern in this restructuring, though as mentioned non-transfer linear probes retain more information in **policy categories** for SFT-only models than they do in RLHF/DPO/GRPO models. 
 
 **Why "policy" vs "factual"?**
-- **Policy categories** (`confident_incorrect`, `ambiguous`, `nonsensical`): Correct response requires trained behavior - admitting "I don't know," asking for clarification, recognizing category errors. Fine-tuning explicitly teaches these.
+- **Policy categories** (`confident_incorrect`, `ambiguous`, `nonsensical`): Correct response requires trained behavior like admitting "I don't know," asking for clarification, or recognizing category errors. Fine-tuning explicitly teaches these.
 - **Factual categories** (`confident_correct`, `uncertain_correct`): Correct response requires recalling knowledge. Fine-tuning doesn't specifically target these.
 
-This suggests fine-tuning warps representational geometry specifically where it trains epistemic behaviors. The model learns to say "I don't know" through representational changes that entangle trained behaviors with genuine uncertainty states, making these epistemically distinct states harder to distinguish via linear probing.
+This suggests fine-tuning warps representational geometry specifically where it trains epistemic output behaviors. The model learns to say "I don't know" through representational changes that entangle trained behaviors with genuine uncertainty states, making these epistemically distinct states harder to distinguish via linear probing.
 
 #### Statistical Significance
 
-Sample-level permutation tests confirm all entanglement effects are highly significant (p < 0.001). By comparing ~249 RLHF-category samples vs ~243 non-RLHF samples directly, we achieve proper statistical power:
+Sample-level permutation tests confirm all entanglement effects are highly significant (p < 0.001). We compare ~249 fine-tuned-category samples vs ~243 non-fine-tuned samples directly:
 
 | Model | Training | RLHF Δ | Non-RLHF Δ | Difference | 95% CI | Cohen's d |
 |-------|----------|--------|------------|------------|--------|-----------|
@@ -88,7 +86,7 @@ Sample-level permutation tests confirm all entanglement effects are highly signi
 | Llama | SFT+RLHF+DPO | +0.215 | -0.030 | **+0.245** | [+0.18, +0.31] | 0.65 (medium) |
 | Mistral | SFT only | +0.210 | +0.062 | **+0.148** | [+0.08, +0.21] | 0.38 (small) |
 
-All models show the same pattern: probe error increases significantly more for RLHF categories than non-RLHF categories. Effect sizes range from small (Mistral, d=0.38) to large (Qwen, d=0.81).
+All models show the same pattern: probe error increases significantly more for fine-tuned categories than non-fine-tuned categories. Effect sizes range from small (Mistral, d=0.38) to large (Qwen, d=0.81).
 
 ### 5. The Alignment Paradox: Better Behavior, Worse Transparency
 
