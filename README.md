@@ -90,7 +90,7 @@ All models show the same pattern: probe error increases significantly more for f
 
 #### A Possible Mechanism
 
-Why does fine-tuning cause selective entanglement? Recent work on D-STEER ([Gao et al. 2024](https://arxiv.org/abs/2512.11838)) established that DPO operates as a "low rank steering mechanism"—modifying a narrow subspace of activations rather than broadly restructuring representations. The authors argue DPO teaches models "how to act aligned, not what to believe."
+Why does fine-tuning cause selective entanglement? Recent work on D-STEER ([Gao et al. 2024](https://arxiv.org/abs/2512.11838)) established that DPO operates as a "low rank steering mechanism," modifying a narrow subspace of activations rather than broadly restructuring representations. The authors argue DPO teaches models "how to act aligned, not what to believe."
 
 We tested whether this low-rank structure generalizes beyond DPO to other fine-tuning methods, and whether it explains the entanglement we observe.
 
