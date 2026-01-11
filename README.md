@@ -90,17 +90,15 @@ All models show the same pattern: probe error increases significantly more for f
 
 #### A Possible Mechanism
 
-Why might RLHF/DPO amplify entanglement compared to SFT? Recent work on D-STEER ([Gao et al. 2024](https://arxiv.org/abs/2512.11838)) provides a clue: DPO operates as a "low rank steering mechanism" that modifies a narrow subspace of activations rather than broadly restructuring representations. The authors argue DPO teaches models "how to act aligned, not what to believe."
+Why does fine-tuning cause selective entanglement? Recent work on D-STEER ([Gao et al. 2024](https://arxiv.org/abs/2512.11838)) established that DPO operates as a "low rank steering mechanism"—modifying a narrow subspace of activations rather than broadly restructuring representations. The authors argue DPO teaches models "how to act aligned, not what to believe."
 
-Our findings are consistent with this: entanglement is *selective*, targeting policy behaviors while leaving factual representations relatively intact. If DPO concentrates reward pressure in a narrow epistemic subspace—specifically the regions where models learn to express uncertainty—it may compress the representational distance between "genuinely uncertain" and "should express uncertainty" states, making them harder to distinguish.
-
-This interpretation is suggestive. The consistent 2x effect across model families (Qwen/Llama vs Mistral/Yi) aligns with D-STEER's "narrow subspace" finding, but our probe-based evidence doesn't directly establish the mechanism. We conducted steering vector analysis to test this directly.
+We tested whether this low-rank structure generalizes beyond DPO to other fine-tuning methods, and whether it explains the entanglement we observe.
 
 #### Steering Vector Analysis
 
-Following D-STEER's methodology, we extracted steering vectors (mean activation change from base→instruct) and tested whether entanglement localizes to specific subspaces.
+Using D-STEER's methodology, we extracted steering vectors (mean activation change from base→instruct) and performed SVD analysis across all four model families.
 
-**Low-rank structure confirmed.** SVD analysis shows alignment changes are concentrated in a narrow subspace:
+**Low-rank structure generalizes beyond DPO.** All fine-tuning methods—not just DPO—show alignment changes concentrated in a narrow subspace:
 
 | Model | Training | Effective Rank (80% var) |
 |-------|----------|-------------------------|
