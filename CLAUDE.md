@@ -102,6 +102,8 @@ python run_analysis.py --model qwen_base --compare qwen_instruct --analysis sign
 - `effects.py` - Effect sizes (Cohen's d), ROC/AUC curves
 - `comparison.py` - Cross-model generalization, bidirectional transfer
 - `entanglement.py` - Fine-tuning entanglement analysis (probe confidence, bootstrap CIs, held-out generalization)
+- `statistics.py` - Significance testing, permutation tests, FDR correction
+- `steering.py` - D-STEER-inspired steering vector analysis (SVD, low-rank, ablation)
 - `plotting.py` - Visualization functions
 
 ### Key Analysis Features
@@ -209,6 +211,31 @@ We find that fine-tuning doesn't just change model outputs - it **entangles** in
 
 **`analysis/comparison.py`:**
 - `transfer_by_category()` - Probe transfer from base→instruct broken down by category
+
+### Steering Vector Analysis (D-STEER-inspired)
+
+D-STEER ([Gao et al. 2024](https://arxiv.org/abs/2512.11838)) shows DPO operates as "low-rank steering" in a narrow subspace. The `analysis/steering.py` module tests if our entanglement findings localize to this subspace.
+
+**Run steering analysis:**
+```bash
+python run_analysis.py --model qwen_base --compare qwen_instruct --analysis steering
+```
+
+**`analysis/steering.py` functions:**
+- `extract_steering_vector()` - Compute alignment direction: mean(instruct) - mean(base)
+- `project_onto_steering()` - Project samples onto steering direction, analyze by category
+- `steering_by_category()` - Full analysis of how each category moves along steering direction
+- `low_rank_analysis()` - SVD to test if alignment changes are low-rank
+- `ablate_steering_subspace()` - Remove top-k SVD components, re-run probes (causal test)
+- `run_full_steering_analysis()` - Complete analysis suite
+
+**Key findings from steering analysis:**
+- Alignment changes are **low-rank** (14-19 dimensions capture 80% variance), confirming D-STEER
+- Policy categories load ~1.3-1.4x more heavily on top SVD components
+- However, entanglement is **not fully localized** to the mean steering vector
+- Ablation of steering subspace has mixed effects on policy-factual gap
+
+This suggests entanglement may occur in **category-specific subspaces** rather than the overall alignment direction.
 
 ### Alignment Implications
 

@@ -30,6 +30,24 @@ from .statistics import (
     # Utilities
     summarize_significance,
 )
+from .steering import (
+    extract_steering_vector,
+    project_onto_steering,
+    steering_by_category,
+    low_rank_analysis,
+    ablate_steering_subspace,
+    run_full_steering_analysis,
+    # Category-specific steering
+    extract_category_steering_vectors,
+    category_specific_projection_analysis,
+    ablate_differential_steering,
+    run_category_specific_steering_analysis,
+    # Subcategory convergence analysis
+    extract_subcategory_steering_vectors,
+    subcategory_convergence_analysis,
+    subcategory_centroid_analysis,
+    run_subcategory_convergence_analysis,
+)
 
 __all__ = [
     # Data loading
@@ -75,4 +93,21 @@ __all__ = [
     'SeedSensitivityResult',
     # Utilities (NEW)
     'summarize_significance',
+    # Steering vector analysis (NEW)
+    'extract_steering_vector',
+    'project_onto_steering',
+    'steering_by_category',
+    'low_rank_analysis',
+    'ablate_steering_subspace',
+    'run_full_steering_analysis',
+    # Category-specific steering (NEW)
+    'extract_category_steering_vectors',
+    'category_specific_projection_analysis',
+    'ablate_differential_steering',
+    'run_category_specific_steering_analysis',
+    # Subcategory convergence analysis (NEW)
+    'extract_subcategory_steering_vectors',
+    'subcategory_convergence_analysis',
+    'subcategory_centroid_analysis',
+    'run_subcategory_convergence_analysis',
 ]

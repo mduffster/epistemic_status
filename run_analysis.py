@@ -53,6 +53,10 @@ from analysis.entanglement import (
     run_entanglement_seed_sensitivity,
     run_full_significance_analysis,
 )
+from analysis.steering import (
+    run_full_steering_analysis,
+    run_subcategory_convergence_analysis,
+)
 from analysis.plotting import (
     plot_entropy_distributions,
     plot_layer_analysis,
@@ -239,6 +243,51 @@ def run_significance_analysis(data1, data2, n_permutations=1000, n_seeds=5):
     return results
 
 
+def run_steering_analysis(data1, data2, n_ablate_components=10):
+    """Run D-STEER-inspired steering vector analysis.
+
+    Tests if fine-tuning entanglement localizes to a narrow subspace:
+    - Extracts steering vector (alignment direction)
+    - Projects samples onto steering direction by category
+    - SVD analysis to test low-rank hypothesis
+    - Ablation test to verify localization
+    """
+    print("\n" + "=" * 60)
+    print(f"STEERING ANALYSIS: {data1.name} -> {data2.name}")
+    print("=" * 60)
+
+    results = run_full_steering_analysis(
+        data1, data2,
+        position='last',
+        n_ablate_components=n_ablate_components,
+        print_output=True
+    )
+
+    save_results(results, f"{data1.name}_vs_{data2.name}_steering")
+    return results
+
+
+def run_convergence_analysis(data1, data2):
+    """Run subcategory convergence analysis.
+
+    Tests whether policy categories (confident_incorrect, ambiguous, nonsensical)
+    converge toward similar representation spaces during fine-tuning - the
+    actual mechanism of entanglement.
+    """
+    print("\n" + "=" * 60)
+    print(f"CONVERGENCE ANALYSIS: {data1.name} -> {data2.name}")
+    print("=" * 60)
+
+    results = run_subcategory_convergence_analysis(
+        data1, data2,
+        position='last',
+        print_output=True
+    )
+
+    save_results(results, f"{data1.name}_vs_{data2.name}_convergence")
+    return results
+
+
 def main():
     parser = argparse.ArgumentParser(description="Epistemic Probing Analysis")
     parser.add_argument("--model", required=True, help="Model name (e.g., qwen_base)")
@@ -248,9 +297,10 @@ def main():
         "--analysis",
         nargs='+',
         choices=['core', 'controlled', 'layers', 'entropy', 'calibration',
-                 'effects', 'roc', 'generalization', 'entanglement', 'significance', 'all'],
+                 'effects', 'roc', 'generalization', 'entanglement', 'significance',
+                 'steering', 'convergence', 'all'],
         default=['core'],
-        help="Analysis types to run (significance requires --compare)"
+        help="Analysis types to run (significance, steering, convergence require --compare)"
     )
     parser.add_argument("--save_plots", action="store_true", help="Save plots to files")
     parser.add_argument("--n_permutations", type=int, default=1000,
@@ -265,7 +315,7 @@ def main():
         args.analysis = ['core', 'controlled', 'layers', 'entropy',
                          'calibration', 'effects', 'roc', 'entanglement']
         if args.compare:
-            args.analysis.extend(['generalization', 'significance'])
+            args.analysis.extend(['generalization', 'significance', 'steering', 'convergence'])
 
     # Load primary model
     print(f"\n{'=' * 60}")
@@ -326,6 +376,12 @@ def main():
                 n_permutations=args.n_permutations,
                 n_seeds=args.n_seeds
             )
+
+        if 'steering' in args.analysis:
+            run_steering_analysis(data, data2)
+
+        if 'convergence' in args.analysis:
+            run_convergence_analysis(data, data2)
 
         # If layers analysis was run, also compare layers
         if 'layers' in args.analysis:

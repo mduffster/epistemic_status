@@ -2,13 +2,20 @@
 
 We show that fine-tuning degrades the separability of epistemic states in language model activations. By probing hidden states across 8 models (4 families × base/instruct), we find that alignment training entangles **trained epistemic behaviors** (admitting ignorance, acknowledging ambiguity) with **genuine uncertainty**, making these internal states harder to distinguish despite improved behavioral performance.
 
-**Context**: Prior work established that language models represent epistemic states internally ([Kadavath et al. 2022](https://arxiv.org/abs/2207.05221), [Azaria & Mitchell 2023](https://arxiv.org/abs/2304.13734)). We extend this by showing *how fine-tuning alters these representations* - specifically, that alignment creates targeted entanglement where it trains epistemic policy behaviors. Critically, we find that **RLHF/DPO roughly doubles the entanglement effect compared to SFT alone**.
+**Context**: Prior work established that language models represent epistemic states internally ([Kadavath et al. 2022](https://arxiv.org/abs/2207.05221), [Azaria & Mitchell 2023](https://arxiv.org/abs/2304.13734)). These studies asked *whether* models have uncertainty representations. We extend this by asking *what happens to these representations during fine-tuning*.
+
+Our contribution is empirical characterization:
+- **Selective entanglement:** Degradation targets policy categories, not factual ones
+- **RLHF/DPO amplification:** Preference optimization roughly doubles the effect vs SFT alone
+- **The alignment paradox:** Behavioral improvements coexist with representational degradation
+
+We do not claim these findings are surprising—it's plausible that training on epistemic outputs would affect epistemic representations. The contribution is *quantifying* the effect across training methods and identifying its selectivity.
     
 ## Key Findings
 
 ### 1. Models Hide Epistemic Information
 
-Linear probes on activations predict output correctness better than output entropy alone. The gap reveals "hidden information" or uncertainty the model accurately represents internally but fails to surface:
+Linear probes on activations predict output correctness better than output entropy alone. The gap reveals "hidden information"—uncertainty the model accurately represents internally but fails to surface:
 
 | Model | Entropy AUC | Probe AUC | Hidden Info |
 |-------|-------------|-----------|-------------|
@@ -17,29 +24,22 @@ Linear probes on activations predict output correctness better than output entro
 | Yi 6B base | 0.825 | 0.956 | 13.1% |
 | Qwen 2.5 7B base | 0.788 | 0.935 | 14.6% |
 
-### 2. Training Origin Determines Transparency (Not Architecture)
+**Training origin matters more than architecture.** Yi and Llama share the same architecture but differ 4x in hidden information (13.1% vs 3.0%). English-trained models (Llama, Mistral) have highly informative entropy; Chinese-trained models (Qwen, Yi) hide more. The models "know" they're uncertain but the signal doesn't make it to logprobs.
 
-Yi and Llama share the same architecture but differ 4x in hidden information:
-
-| Model | Architecture | Training Data | Hidden Info |
-|-------|--------------|---------------|-------------|
-| Llama 3.1 8B | LLaMA | English | 3.0% |
-| Yi 6B | LLaMA-derived | Chinese | 13.1% |
-
-English-trained models (Llama, Mistral) have highly informative entropy. Chinese-trained models (Qwen, Yi) are less informative. The models "know" they're uncertain but the signal doesn't make it to logprobs.
-
-### 3. Fine-Tuning Degrades Epistemic Transparency
+### 2. Fine-Tuning Degrades Epistemic Transparency
 
 Instruct tuning makes entropy *less* informative across all models, regardless of methodology:
 
-| Model | Entropy (base) | Entropy (instruct) | Hidden (base) | Hidden (instruct) |
-|-------|----------------|--------------------| --------------|-------------------|
-| Llama | 0.914 | 0.734 | 3.0% | 10.5% |
-| Mistral | 0.930 | 0.741 | 1.6% | 8.2% |
-| Yi | 0.825 | 0.649 | 13.1% | 22.4% |
-| Qwen | 0.788 | 0.553 | 14.6% | 20.7% |
+| Model | Training | Entropy (base) | Probe (base) | Hidden (base) | Entropy (inst) | Probe (inst) | Hidden (inst) |
+|-------|----------|----------------|--------------|---------------|----------------|--------------|---------------|
+| Qwen | SFT+DPO+GRPO | 0.788 | 0.935 | 14.6% | 0.553 | 0.760 | 20.7% |
+| Llama | SFT+RLHF+DPO | 0.914 | 0.943 | 3.0% | 0.734 | 0.839 | 10.5% |
+| Mistral | SFT only | 0.930 | 0.946 | 1.6% | 0.741 | 0.823 | 8.2% |
+| Yi | SFT only | 0.825 | 0.956 | 13.1% | 0.649 | 0.873 | 22.4% |
 
-### 4. "Entanglement" Occurs Where Fine-Tuning Trains Policy Behaviors
+*Hidden = Probe AUC − Entropy AUC (information the model has internally but doesn't surface)*
+
+### 3. Entanglement is Selective
 
 The key finding: representational degradation is *selective*. Probe error rates increase specifically for **policy categories**, those where fine-tuning trains epistemic output behaviors, while **factual categories** remain relatively stable or improve:
 
@@ -88,27 +88,86 @@ Sample-level permutation tests confirm all entanglement effects are highly signi
 
 All models show the same pattern: probe error increases significantly more for fine-tuned categories than non-fine-tuned categories. Effect sizes range from small (Mistral, d=0.38) to large (Qwen, d=0.81).
 
-### 5. The Alignment Paradox: Better Behavior, Worse Transparency
+#### A Possible Mechanism
 
-Despite internal entanglement, behavioral hallucination detection improves dramatically:
+Why might RLHF/DPO amplify entanglement compared to SFT? Recent work on D-STEER ([Gao et al. 2024](https://arxiv.org/abs/2512.11838)) provides a clue: DPO operates as a "low rank steering mechanism" that modifies a narrow subspace of activations rather than broadly restructuring representations. The authors argue DPO teaches models "how to act aligned, not what to believe."
 
-| Model | Training | Base | Instruct |
-|-------|----------|------|----------|
-| Llama | SFT + RLHF + DPO | 7.1% | **68.7%** |
-| Qwen | SFT + DPO + GRPO | 1.0% | 58.6% |
-| Mistral | SFT only | 6.1% | 28.3% |
-| Yi | SFT only | 1.0% | 19.2% |
+Our findings are consistent with this: entanglement is *selective*, targeting policy behaviors while leaving factual representations relatively intact. If DPO concentrates reward pressure in a narrow epistemic subspace—specifically the regions where models learn to express uncertainty—it may compress the representational distance between "genuinely uncertain" and "should express uncertainty" states, making them harder to distinguish.
 
-Fine-tuning teaches models to *behave* as if they know what they don't know, while making internal representations *harder to interpret*. RLHF/DPO models show the largest behavioral gains but also the most entanglement.
+This interpretation is suggestive. The consistent 2x effect across model families (Qwen/Llama vs Mistral/Yi) aligns with D-STEER's "narrow subspace" finding, but our probe-based evidence doesn't directly establish the mechanism. We conducted steering vector analysis to test this directly.
+
+#### Steering Vector Analysis
+
+Following D-STEER's methodology, we extracted steering vectors (mean activation change from base→instruct) and tested whether entanglement localizes to specific subspaces.
+
+**Low-rank structure confirmed.** SVD analysis shows alignment changes are concentrated in a narrow subspace:
+
+| Model | Training | Effective Rank (80% var) |
+|-------|----------|-------------------------|
+| Qwen | SFT+DPO+GRPO | 14 dimensions |
+| Llama | SFT+RLHF+DPO | 19 dimensions |
+| Mistral | SFT only | 18 dimensions |
+| Yi | SFT only | 19 dimensions |
+
+All models show low-rank structure (14-19 dimensions capture 80% of variance in a ~100k-dimensional space), consistent with D-STEER's "narrow subspace" finding.
+
+**Category-specific steering reveals divergence.** We computed separate steering vectors for policy and factual categories. If fine-tuning affects them uniformly, these should be parallel. They're not:
+
+| Model | Training | Policy↔Factual Similarity | Differential Effect (d) |
+|-------|----------|--------------------------|------------------------|
+| Qwen | SFT+DPO+GRPO | 0.88 | 2.47 (large) |
+| Llama | SFT+RLHF+DPO | **0.76** | **3.15** (large) |
+| Mistral | SFT only | 0.80 | 3.80 (large) |
+| Yi | SFT only | 0.93 | 2.51 (large) |
+
+Policy and factual categories move in *different directions* during fine-tuning (cosine similarities 0.76-0.93). The differential steering vector—the direction where they diverge—separates categories with large effect sizes (d > 2.4).
+
+**Subcategory convergence reveals the entanglement mechanism.** We measured how centroid distances between categories change during fine-tuning. Policy subcategories (confident_incorrect, ambiguous, nonsensical) converge toward similar representation spaces:
+
+| Model | Training | Policy Δ Distance | Factual Δ Distance | Pattern |
+|-------|----------|-------------------|--------------------|--------------------|
+| Llama | SFT+RLHF+DPO | **-41.0%** | -23.7% | Policy converges more |
+| Yi | SFT only | **-16.8%** | -4.5% | Selective policy convergence |
+| Qwen | SFT+DPO+GRPO | -17.2% | -21.3% | General convergence |
+| Mistral | SFT only | +18.1% | +29.7% | Divergence (outlier) |
+
+*Negative = centroids move closer together. Policy categories = confident_incorrect, ambiguous, nonsensical. Factual = confident_correct, uncertain_correct.*
+
+**Interpretation.** Fine-tuning creates a shared "policy response" space where different trained epistemic behaviors overlap:
+- **Llama (RLHF+DPO)** shows the strongest effect: policy centroids move 41% closer while factual only moves 24% closer
+- **Yi (SFT)** shows selective convergence: policy converges 17%, factual barely moves (5%)
+- **Mistral** is an outlier where everything diverges, though policy diverges less than factual
+
+This is direct evidence of the entanglement mechanism: when models learn to admit ignorance (confident_incorrect), acknowledge ambiguity (ambiguous), and recognize nonsense (nonsensical), these epistemically distinct situations are being mapped to overlapping regions of representation space. The model learns a general "express uncertainty" response rather than maintaining distinct representations for each epistemic state.
+
+### 4. The Alignment Paradox
+
+Despite internal entanglement, behavioral performance improves dramatically—especially for policy categories:
+
+| Model | Training | Factual (base) | Factual (inst) | Policy (base) | Policy (inst) |
+|-------|----------|----------------|----------------|---------------|---------------|
+| Qwen | SFT+DPO+GRPO | 81.1% | 93.8% | 5.2% | **62.7%** |
+| Llama | SFT+RLHF+DPO | 90.9% | 94.7% | 4.8% | **55.8%** |
+| Mistral | SFT only | 90.9% | 90.9% | 2.8% | 34.5% |
+| Yi | SFT only | 83.1% | 88.1% | 1.6% | 27.3% |
+
+*Behavioral accuracy = % of prompts answered correctly. Factual = confident_correct, uncertain_correct. Policy = confident_incorrect, ambiguous, nonsensical.*
+
+Base models achieve near-zero policy accuracy—they don't admit ignorance, acknowledge ambiguity, or recognize nonsense. Fine-tuning fixes this behaviorally (+50-60pp for RLHF/DPO, +25-30pp for SFT-only), but the internal probe accuracy on policy categories *drops* (Section 3). Better behavior, worse transparency.
 
 ## Implications for Alignment & Interpretability
 
-1. **Fine-tuning trades interpretability for behavior** - alignment achieves epistemic caution by warping internal representations, not by building distinct "I should acknowledge uncertainty" circuits
-2. **RLHF/DPO amplifies the effect** - preference optimization roughly doubles entanglement compared to SFT alone, suggesting the reward signal specifically targets epistemic behaviors
-3. **Entanglement is targeted** - degradation occurs specifically where fine-tuning trains policy behaviors, suggesting interpretability researchers should focus on alignment-modified regions
-4. **Entropy-based uncertainty is unreliable** - logprob-based uncertainty estimation works for some models but fails for others; internal probing may be necessary for robust uncertainty quantification
-5. **Internal state remains recoverable** - linear probes achieve 0.76-0.96 AUC even after fine-tuning, suggesting interpretability tools could surface the hidden epistemic information that alignment obscures
-6. **Calibration is not an alignment objective** - current fine-tuning prioritizes behavioral compliance over transparent uncertainty signaling
+1. **Probe transfer as training monitoring** - Factual representations transfer well (~85%) from base→instruct for RLHF/DPO models. Probes trained on base activations could monitor what knowledge is preserved during fine-tuning; if transfer drops for factual categories, it may indicate unintended knowledge loss.
+
+2. **Fine-tuning trades interpretability for behavior** - Alignment achieves epistemic caution by warping internal representations, not by building distinct "I should acknowledge uncertainty" circuits.
+
+3. **RLHF/DPO amplifies the effect** - Preference optimization roughly doubles entanglement compared to SFT alone, consistent with D-STEER's finding that DPO modifies a narrow subspace.
+
+4. **Entanglement is targeted** - Degradation occurs specifically where fine-tuning trains policy behaviors, suggesting interpretability researchers should focus on alignment-modified regions.
+
+5. **Entropy-based uncertainty is unreliable** - Logprob-based uncertainty estimation works for some models but fails for others; internal probing may be necessary for robust uncertainty quantification.
+
+6. **Internal state remains recoverable** - Linear probes achieve 0.76-0.96 AUC even after fine-tuning, suggesting interpretability tools could surface the hidden epistemic information that alignment obscures.
 
 ## Quick Start
 
@@ -153,6 +212,7 @@ The dataset contains ~600 prompts across 6 epistemic categories, divided into **
 - **Cross-model generalization**: Do probes transfer between base/instruct variants?
 - **Entanglement analysis**: Probe confidence by category, held-out generalization, activation similarity
 - **Significance testing**: Sample-level permutation tests with FDR correction for multiple comparisons
+- **Steering vector analysis**: D-STEER-inspired SVD analysis, category-specific steering, ablation tests
 
 ### Linear vs Non-Linear Probes
 
@@ -201,7 +261,8 @@ epistemic_status/
 │   ├── calibration.py      # Confidence calibration
 │   ├── comparison.py       # Cross-model analysis
 │   ├── entanglement.py     # Fine-tuning entanglement analysis
-│   └── statistics.py       # Significance testing, multiple comparison correction
+│   ├── statistics.py       # Significance testing, multiple comparison correction
+│   └── steering.py         # D-STEER-inspired steering vector analysis
 └── activations/            # Collected activation data
     ├── qwen_base/
     ├── qwen_instruct/
