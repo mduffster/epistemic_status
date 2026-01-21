@@ -1,0 +1,37 @@
+\begin{thebibliography}{4}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Azaria and Mitchell(2023)]{azaria2023internal}
+Amos Azaria and Tom Mitchell.
+\newblock The internal state of an {LLM} knows when it's lying.
+\newblock In \emph{Findings of the Association for Computational Linguistics:
+  EMNLP 2023}, pages 967--976. Association for Computational Linguistics, 2023.
+\newblock URL \url{https://aclanthology.org/2023.findings-emnlp.68/}.
+
+\bibitem[Kadavath et~al.(2022)Kadavath, Conerly, Askell, Henighan, Drain,
+  Perez, Schiefer, Hatfield-Dodds, DasSarma, Tran-Johnson,
+  et~al.]{kadavath2022language}
+Saurav Kadavath, Tom Conerly, Amanda Askell, Tom Henighan, Dawn Drain, Ethan
+  Perez, Nicholas Schiefer, Zac Hatfield-Dodds, Nova DasSarma, Eli
+  Tran-Johnson, et~al.
+\newblock Language models (mostly) know what they know, 2022.
+\newblock URL \url{https://arxiv.org/abs/2207.05221}.
+
+\bibitem[Nanda and Bloom(2022)]{nanda2022transformerlens}
+Neel Nanda and Joseph Bloom.
+\newblock Transformerlens.
+\newblock \url{https://github.com/TransformerLensOrg/TransformerLens}, 2022.
+\newblock Software library for mechanistic interpretability.
+
+\bibitem[Raina et~al.(2024)Raina, Das, Chakraborty, and Ganguly]{gao2024dsteer}
+Samarth Raina, Amitava Das, Tanmoy Chakraborty, and Niloy Ganguly.
+\newblock {D-STEER}: Preference alignment techniques learn to behave, not to
+  believe -- beneath the surface, {DPO} as steering vector perturbation in
+  activation space, 2024.
+\newblock URL \url{https://arxiv.org/abs/2512.11838}.
+
+\end{thebibliography}

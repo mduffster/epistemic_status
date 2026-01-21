@@ -394,27 +394,28 @@ def extract_confidence(response: str) -> Optional[int]:
     return None
 
 
-def create_prompt_with_confidence(base_prompt: str, model_type: str = "instruct") -> str:
+def create_prompt(base_prompt: str, model_type: str = "instruct") -> str:
     """
-    Wrap a prompt to request both an answer and confidence rating.
-    
+    Create a simple prompt for activation collection.
+
+    Uses identical format for both base and instruct models to ensure
+    any differences in activations are due to fine-tuning, not prompt structure.
+
     Args:
         base_prompt: The original question/prompt
-        model_type: 'instruct' or 'base' to adjust prompting style
-        
+        model_type: Ignored - kept for API compatibility
+
     Returns:
-        Modified prompt requesting answer + confidence
+        Simple Q&A formatted prompt
     """
-    if model_type == "instruct":
-        return f"""Answer the following question concisely. After your answer, provide a confidence rating from 1-10 where 1 means very uncertain and 10 means absolutely certain.
-
-Question: {base_prompt}
-
-Answer (then confidence 1-10):"""
-    else:
-        # For base models, use a more completion-style prompt
-        return f"""Question: {base_prompt}
+    return f"""Question: {base_prompt}
 Answer:"""
+
+
+# Backwards compatibility alias
+def create_prompt_with_confidence(base_prompt: str, model_type: str = "instruct") -> str:
+    """Deprecated: Use create_prompt instead."""
+    return create_prompt(base_prompt, model_type)
 
 
 

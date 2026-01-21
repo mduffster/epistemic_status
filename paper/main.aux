@@ -1,0 +1,175 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{kadavath2022language,azaria2023internal}
+\citation{gao2024dsteer}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{section.1}\protected@file@percent }
+\newlabel{sec:intro}{{1}{1}{Introduction}{section.1}{}}
+\citation{kadavath2022language}
+\citation{azaria2023internal}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.1}The Selective Steering Hypothesis}{2}{subsection.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.2}Contributions}{2}{subsection.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.3}Implications}{2}{subsection.1.3}\protected@file@percent }
+\citation{gao2024dsteer}
+\@writefile{toc}{\contentsline {section}{\numberline {2}Background and Related Work}{3}{section.2}\protected@file@percent }
+\newlabel{sec:related}{{2}{3}{Background and Related Work}{section.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Epistemic States in Language Models}{3}{subsection.2.1}\protected@file@percent }
+\newlabel{sec:related:epistemic}{{2.1}{3}{Epistemic States in Language Models}{subsection.2.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Fine-Tuning and Representation Geometry}{3}{subsection.2.2}\protected@file@percent }
+\newlabel{sec:related:geometry}{{2.2}{3}{Fine-Tuning and Representation Geometry}{subsection.2.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Calibration and Overconfidence}{3}{subsection.2.3}\protected@file@percent }
+\newlabel{sec:related:calibration}{{2.3}{3}{Calibration and Overconfidence}{subsection.2.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Training Method Taxonomy}{3}{subsection.2.4}\protected@file@percent }
+\newlabel{sec:related:methods}{{2.4}{3}{Training Method Taxonomy}{subsection.2.4}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Epistemic category taxonomy with examples and evaluation criteria. Policy categories require trained behaviors; factual categories require knowledge recall.}}{4}{table.caption.3}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{tab:categories}{{1}{4}{Epistemic category taxonomy with examples and evaluation criteria. Policy categories require trained behaviors; factual categories require knowledge recall}{table.caption.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Methodology}{4}{section.3}\protected@file@percent }
+\newlabel{sec:methods}{{3}{4}{Methodology}{section.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Epistemic Category Taxonomy}{4}{subsection.3.1}\protected@file@percent }
+\newlabel{sec:methods:categories}{{3.1}{4}{Epistemic Category Taxonomy}{subsection.3.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{Factual categories.}{4}{section*.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Policy categories.}{4}{section*.2}\protected@file@percent }
+\citation{nanda2022transformerlens}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Dataset Construction}{5}{subsection.3.2}\protected@file@percent }
+\newlabel{sec:methods:dataset}{{3.2}{5}{Dataset Construction}{subsection.3.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{Evaluation logic.}{5}{section*.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Models and Activation Extraction}{5}{subsection.3.3}\protected@file@percent }
+\newlabel{sec:methods:models}{{3.3}{5}{Models and Activation Extraction}{subsection.3.3}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Models studied and their training methods. This selection enables a natural experiment comparing SFT-only (Mistral, Yi) with RLHF/DPO methods (Llama, Qwen).}}{5}{table.caption.5}\protected@file@percent }
+\newlabel{tab:models}{{2}{5}{Models studied and their training methods. This selection enables a natural experiment comparing SFT-only (Mistral, Yi) with RLHF/DPO methods (Llama, Qwen)}{table.caption.5}{}}
+\citation{gao2024dsteer}
+\@writefile{toc}{\contentsline {paragraph}{Activation extraction.}{6}{section*.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Prompt formatting.}{6}{section*.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Steering Vector Analysis}{6}{subsection.3.4}\protected@file@percent }
+\newlabel{sec:methods:steering}{{3.4}{6}{Steering Vector Analysis}{subsection.3.4}{}}
+\@writefile{toc}{\contentsline {paragraph}{Steering vector extraction.}{6}{section*.8}\protected@file@percent }
+\newlabel{eq:steering}{{1}{6}{Steering vector extraction}{equation.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{Category projections.}{6}{section*.9}\protected@file@percent }
+\newlabel{eq:projection}{{2}{6}{Category projections}{equation.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{Low-rank analysis.}{6}{section*.10}\protected@file@percent }
+\newlabel{eq:rank}{{3}{6}{Low-rank analysis}{equation.3}{}}
+\@writefile{toc}{\contentsline {paragraph}{Category loading ratio.}{6}{section*.11}\protected@file@percent }
+\newlabel{eq:loading}{{4}{6}{Category loading ratio}{equation.4}{}}
+\newlabel{eq:loading_ratio}{{5}{7}{Category loading ratio}{equation.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Linear Probing Protocol}{7}{subsection.3.5}\protected@file@percent }
+\newlabel{sec:methods:probing}{{3.5}{7}{Linear Probing Protocol}{subsection.3.5}{}}
+\newlabel{eq:probe}{{6}{7}{Linear Probing Protocol}{equation.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.6}Probe Transfer Protocol}{7}{subsection.3.6}\protected@file@percent }
+\newlabel{sec:methods:transfer}{{3.6}{7}{Probe Transfer Protocol}{subsection.3.6}{}}
+\@writefile{toc}{\contentsline {paragraph}{Base-to-instruct transfer.}{7}{section*.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Category-wise transfer.}{7}{section*.13}\protected@file@percent }
+\newlabel{eq:transfer_gap}{{7}{7}{Category-wise transfer}{equation.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.7}Statistical Testing}{7}{subsection.3.7}\protected@file@percent }
+\newlabel{sec:methods:stats}{{3.7}{7}{Statistical Testing}{subsection.3.7}{}}
+\@writefile{toc}{\contentsline {paragraph}{Sample-level permutation test.}{7}{section*.14}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Bootstrap confidence intervals.}{7}{section*.15}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Mean projection of each category type onto the steering vector $\mathbf  {v}_{\text  {steer}}$. Policy categories consistently move further than factual categories. All ratios significantly $> 1.0$ at $p < 0.001$ via bootstrap (1000 iterations).}}{8}{table.caption.18}\protected@file@percent }
+\newlabel{tab:steering}{{3}{8}{Mean projection of each category type onto the steering vector $\mathbf {v}_{\text {steer}}$. Policy categories consistently move further than factual categories. All ratios significantly $> 1.0$ at $p < 0.001$ via bootstrap (1000 iterations)}{table.caption.18}{}}
+\@writefile{toc}{\contentsline {paragraph}{Multiple comparison correction.}{8}{section*.16}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Seed sensitivity.}{8}{section*.17}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Results}{8}{section.4}\protected@file@percent }
+\newlabel{sec:results}{{4}{8}{Results}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Main Finding: Selective Steering}{8}{subsection.4.1}\protected@file@percent }
+\newlabel{sec:results:main}{{4.1}{8}{Main Finding: Selective Steering}{subsection.4.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{Low-rank structure.}{8}{section*.19}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Effective rank (dimensions for 80\% variance) shows alignment changes concentrate in a low-rank subspace across all training methods. Loading ratio measures how heavily policy categories load on top-10 SVD components relative to factual categories.}}{8}{table.caption.20}\protected@file@percent }
+\newlabel{tab:lowrank}{{4}{8}{Effective rank (dimensions for 80\% variance) shows alignment changes concentrate in a low-rank subspace across all training methods. Loading ratio measures how heavily policy categories load on top-10 SVD components relative to factual categories}{table.caption.20}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Probe transfer accuracy (train on base, test on instruct). For preference-optimized models, factual categories transfer well while policy categories show substantial degradation.}}{9}{table.caption.21}\protected@file@percent }
+\newlabel{tab:transfer}{{5}{9}{Probe transfer accuracy (train on base, test on instruct). For preference-optimized models, factual categories transfer well while policy categories show substantial degradation}{table.caption.21}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Centroid distance changes during fine-tuning. Negative values indicate categories moving closer (convergence); positive values indicate divergence. RS + DPO (Llama) compresses broadly; DPO + GRPO (Qwen) operates more selectively.}}{9}{table.caption.23}\protected@file@percent }
+\newlabel{tab:convergence}{{6}{9}{Centroid distance changes during fine-tuning. Negative values indicate categories moving closer (convergence); positive values indicate divergence. RS + DPO (Llama) compresses broadly; DPO + GRPO (Qwen) operates more selectively}{table.caption.23}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Probe Transfer Confirms Selective Preservation}{9}{subsection.4.2}\protected@file@percent }
+\newlabel{sec:results:transfer}{{4.2}{9}{Probe Transfer Confirms Selective Preservation}{subsection.4.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{SFT-only models show smaller gaps.}{9}{section*.22}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Training Method Comparison}{9}{subsection.4.3}\protected@file@percent }
+\newlabel{sec:results:training}{{4.3}{9}{Training Method Comparison}{subsection.4.3}{}}
+\@writefile{toc}{\contentsline {paragraph}{RS + DPO compresses broadly.}{9}{section*.24}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{DPO + GRPO operates selectively.}{9}{section*.25}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{SFT-only shows divergence or mixed effects.}{10}{section*.26}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Supporting Evidence: Probe Accuracy and Robustness}{10}{subsection.4.4}\protected@file@percent }
+\newlabel{sec:results:robustness}{{4.4}{10}{Supporting Evidence: Probe Accuracy and Robustness}{subsection.4.4}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Probe and entropy AUC before and after fine-tuning. Probe AUC measures linear separability of correct/incorrect responses in activation space; entropy AUC measures how well output entropy predicts correctness.}}{10}{table.caption.27}\protected@file@percent }
+\newlabel{tab:probe_auc}{{7}{10}{Probe and entropy AUC before and after fine-tuning. Probe AUC measures linear separability of correct/incorrect responses in activation space; entropy AUC measures how well output entropy predicts correctness}{table.caption.27}{}}
+\@writefile{toc}{\contentsline {paragraph}{Prompt-controlled design.}{10}{section*.28}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5}Cross-Architecture Consistency}{10}{subsection.4.5}\protected@file@percent }
+\newlabel{sec:results:crossarch}{{4.5}{10}{Cross-Architecture Consistency}{subsection.4.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Analysis}{11}{section.5}\protected@file@percent }
+\newlabel{sec:analysis}{{5}{11}{Analysis}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Why Does Fine-Tuning Selectively Steer Policy?}{11}{subsection.5.1}\protected@file@percent }
+\newlabel{sec:analysis:why}{{5.1}{11}{Why Does Fine-Tuning Selectively Steer Policy?}{subsection.5.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{What gets steered.}{11}{section*.29}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Hypothesis.}{11}{section*.30}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Training Method Effects}{11}{subsection.5.2}\protected@file@percent }
+\newlabel{sec:analysis:training_effects}{{5.2}{11}{Training Method Effects}{subsection.5.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{RS + DPO compresses broadly.}{11}{section*.31}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{DPO + GRPO operates selectively.}{11}{section*.32}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{SFT-only causes different restructuring.}{11}{section*.33}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Representations Change But Remain Separable}{11}{subsection.5.3}\protected@file@percent }
+\newlabel{sec:analysis:separability}{{5.3}{11}{Representations Change But Remain Separable}{subsection.5.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Predictable Reorganization Accompanies Behavioral Gains}{12}{subsection.5.4}\protected@file@percent }
+\newlabel{sec:analysis:behavioral}{{5.4}{12}{Predictable Reorganization Accompanies Behavioral Gains}{subsection.5.4}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces Behavioral accuracy before and after fine-tuning. Policy accuracy improves substantially while representations are selectively steered.}}{12}{table.caption.34}\protected@file@percent }
+\newlabel{tab:behavioral}{{8}{12}{Behavioral accuracy before and after fine-tuning. Policy accuracy improves substantially while representations are selectively steered}{table.caption.34}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6}Discussion}{12}{section.6}\protected@file@percent }
+\newlabel{sec:discussion}{{6}{12}{Discussion}{section.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Implications for Alignment}{12}{subsection.6.1}\protected@file@percent }
+\newlabel{sec:discussion:implications}{{6.1}{12}{Implications for Alignment}{subsection.6.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{1. Selective steering is a fundamental property of alignment, not model-specific.}{12}{section*.35}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{2. Training methods create distinguishable representational profiles.}{12}{section*.36}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{3. Steering analysis reveals structure that probe accuracy misses.}{13}{section*.37}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Methodological Contribution}{13}{subsection.6.2}\protected@file@percent }
+\newlabel{sec:discussion:methods}{{6.2}{13}{Methodological Contribution}{subsection.6.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Limitations}{13}{subsection.6.3}\protected@file@percent }
+\newlabel{sec:discussion:limitations}{{6.3}{13}{Limitations}{subsection.6.3}{}}
+\@writefile{toc}{\contentsline {paragraph}{Phrase-based evaluation.}{13}{section*.38}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Correlation, not causation.}{13}{section*.39}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Limited model scale.}{13}{section*.40}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Cannot isolate training components.}{13}{section*.41}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Uncertain-incorrect ambiguity.}{13}{section*.42}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.4}Future Work}{13}{subsection.6.4}\protected@file@percent }
+\newlabel{sec:discussion:future}{{6.4}{13}{Future Work}{subsection.6.4}{}}
+\bibstyle{plainnat}
+\bibdata{references}
+\bibcite{azaria2023internal}{{1}{2023}{{Azaria and Mitchell}}{{}}}
+\bibcite{kadavath2022language}{{2}{2022}{{Kadavath et~al.}}{{Kadavath, Conerly, Askell, Henighan, Drain, Perez, Schiefer, Hatfield-Dodds, DasSarma, Tran-Johnson, et~al.}}}
+\@writefile{toc}{\contentsline {section}{\numberline {7}Conclusion}{14}{section.7}\protected@file@percent }
+\newlabel{sec:conclusion}{{7}{14}{Conclusion}{section.7}{}}
+\bibcite{nanda2022transformerlens}{{3}{2022}{{Nanda and Bloom}}{{}}}
+\bibcite{gao2024dsteer}{{4}{2024}{{Raina et~al.}}{{Raina, Das, Chakraborty, and Ganguly}}}
+\@writefile{toc}{\contentsline {section}{\numberline {A}Evaluation Logic Details}{15}{appendix.A}\protected@file@percent }
+\newlabel{app:evaluation}{{A}{15}{Evaluation Logic Details}{appendix.A}{}}
+\@writefile{toc}{\contentsline {paragraph}{Factual categories.}{15}{section*.44}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Confident-incorrect (53 phrases).}{15}{section*.45}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Ambiguous (39 phrases).}{15}{section*.46}\protected@file@percent }
+\citation{nanda2022transformerlens}
+\@writefile{toc}{\contentsline {paragraph}{Nonsensical (26 phrases).}{16}{section*.47}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Uncertain-incorrect (12 phrases).}{16}{section*.48}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Limitations.}{16}{section*.49}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {B}Model Details}{16}{appendix.B}\protected@file@percent }
+\newlabel{app:models}{{B}{16}{Model Details}{appendix.B}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces Model specifications for reproducibility. All models are in the 6--8B parameter range with 28--32 transformer layers, accessed via HuggingFace Hub.}}{16}{table.caption.50}\protected@file@percent }
+\newlabel{tab:model_details}{{9}{16}{Model specifications for reproducibility. All models are in the 6--8B parameter range with 28--32 transformer layers, accessed via HuggingFace Hub}{table.caption.50}{}}
+\@writefile{toc}{\contentsline {paragraph}{Generation parameters.}{16}{section*.51}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Activation extraction.}{17}{section*.52}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Prompt format.}{17}{section*.53}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {C}Additional Results}{17}{appendix.C}\protected@file@percent }
+\newlabel{app:results}{{C}{17}{Additional Results}{appendix.C}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.1}Token Position Analysis}{17}{subsection.C.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.2}Per-Category Confidence Intervals}{17}{subsection.C.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces Probe error rates (1 $-$ accuracy) by category with 95\% bootstrap CIs (2,000 iterations, percentile method). Error rates computed via 5-fold cross-validation. Policy categories show larger error increases after fine-tuning for preference-optimized models.}}{17}{table.caption.54}\protected@file@percent }
+\newlabel{tab:category_cis}{{10}{17}{Probe error rates (1 $-$ accuracy) by category with 95\% bootstrap CIs (2,000 iterations, percentile method). Error rates computed via 5-fold cross-validation. Policy categories show larger error increases after fine-tuning for preference-optimized models}{table.caption.54}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.3}Effect Sizes}{17}{subsection.C.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {11}{\ignorespaces Cohen's $d$ effect sizes for activation differences (correct vs incorrect) along the steering direction, computed separately for policy and factual categories. Larger values indicate greater separability.}}{18}{table.caption.55}\protected@file@percent }
+\newlabel{tab:effect_sizes}{{11}{18}{Cohen's $d$ effect sizes for activation differences (correct vs incorrect) along the steering direction, computed separately for policy and factual categories. Larger values indicate greater separability}{table.caption.55}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {D}Statistical Details}{18}{appendix.D}\protected@file@percent }
+\newlabel{app:stats}{{D}{18}{Statistical Details}{appendix.D}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {D.1}Permutation Test Procedure}{18}{subsection.D.1}\protected@file@percent }
+\@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces Sample-Level Permutation Test for Steering Ratio}}{18}{algorithm.1}\protected@file@percent }
+\newlabel{alg:permutation}{{1}{18}{Sample-Level Permutation Test for Steering Ratio}{algorithm.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {D.2}Bootstrap Confidence Intervals}{18}{subsection.D.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {D.3}Multiple Comparison Correction}{19}{subsection.D.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {D.4}Sample-Level vs Category-Level Testing}{19}{subsection.D.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {D.5}Seed Sensitivity Analysis}{19}{subsection.D.5}\protected@file@percent }
+\gdef \@abspage@last{19}

@@ -1,0 +1,843 @@
+\documentclass[11pt]{article}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage[margin=1in]{geometry}
+\usepackage{natbib}
+\usepackage{xcolor}
+\usepackage{subcaption}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{xspace}
+
+% Custom commands
+\newcommand{\ie}{i.e.,\xspace}
+\newcommand{\eg}{e.g.,\xspace}
+\newcommand{\etc}{etc.\xspace}
+\newcommand{\etal}{et al.\xspace}
+
+% Title
+\title{Fine-Tuning Selectively Steers Policy Representations in Language Models}
+
+\author{
+  [Author Names] \\
+  [Affiliations] \\
+  \texttt{[emails]}
+}
+
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Alignment techniques improve behavioral epistemic competence: instruction-tuned models admit ignorance, acknowledge ambiguity, and recognize nonsensical questions. But what happens to internal representations during this process? We investigate via steering vector analysis and probe transfer across 8 models (4 families $\times$ base/instruct variants) with $\sim$600 prompts spanning 6 epistemic categories.
+
+We find that fine-tuning \emph{selectively steers} policy representations more than factual ones. Policy categories---where fine-tuning trains specific epistemic behaviors---move 1.08--1.28$\times$ further along the alignment direction than factual categories requiring knowledge recall (all $p < 0.001$ via bootstrap). Low-rank analysis confirms alignment changes concentrate in 14--19 dimensions.
+
+Probe transfer experiments confirm this selective effect: training probes on base models and testing on instruction-tuned variants reveals factual representations transfer at 0.85--0.87 accuracy while policy representations transfer at only 0.62--0.63 for preference-optimized models (Llama, Qwen). SFT-only models (Mistral, Yi) show smaller or inconsistent gaps, suggesting preference optimization creates more targeted representational changes.
+
+Training method comparison reveals distinct profiles: rejection sampling with DPO (Llama) compresses representations broadly, while DPO with GRPO (Qwen) operates more selectively. Cross-architecture consistency in steering ratios suggests selective steering is a fundamental property of current alignment techniques. The preservation of factual geometry points toward monitoring applications, while the selective steering of policy representations raises questions about whether behavioral alignment and representational transparency can be jointly achieved.
+\end{abstract}
+
+%==============================================================================
+\section{Introduction}
+\label{sec:intro}
+%==============================================================================
+
+Language models are increasingly deployed in domains where uncertainty matters, in fields like medicine, law, scientific research. When a model doesn't know something, we want it to say so. Alignment techniques appear to achieve this: instruction-tuned models admit ignorance, acknowledge ambiguity, and recognize nonsensical questions far more often than their base counterparts.
+
+But how does fine-tuning achieve these behavioral improvements? Prior work established that language models represent uncertainty internally \citep{kadavath2022language, azaria2023internal}. Linear probes on activations can predict response correctness. Recent work on D-STEER \citep{gao2024dsteer} showed that DPO operates as ``low-rank steering,'' modifying a narrow subspace of activations rather than broadly restructuring representations. We extend this by asking: \emph{what gets steered and how?}
+
+\subsection{The Selective Steering Hypothesis}
+
+We hypothesize that fine-tuning \emph{selectively steers} policy representations more than factual ones, whice moves trained epistemic behaviors further along the alignment direction while relatively preserving knowledge recall representations.
+
+Specifically, we distinguish two types of prompt-based epistemic situations:
+
+\begin{itemize}
+    \item \textbf{Factual categories}: The correct response requires knowledge recall. ``What is the capital of France?'' requires retrieving stored information.
+    \item \textbf{Policy categories}: The correct response requires a trained epistemic behavior. ``What is the capital of Bugoviana?'' requires recognizing the entity is fictional and admitting ignorance.
+\end{itemize}
+
+Fine-tuning explicitly trains policy behaviors, like admitting ``I don't know,'' acknowledging ambiguity, and recognizing category errors. Our hypothesis is that this training disproportionately steers policy representations along the alignment direction while preserving factual geometry.
+
+\subsection{Contributions}
+
+We test this hypothesis across 8 models (4 families $\times$ base/instruct) with 589 prompts spanning 6 epistemic categories. Our contributions:
+
+\begin{enumerate}
+    \item \textbf{Steering analysis}: Policy categories move 1.08--1.28$\times$ further along the alignment direction than factual categories (all $p < 0.001$ via bootstrap). Low-rank analysis confirms alignment changes concentrate in 14--19 dimensions.
+
+    \item \textbf{Probe transfer}: Training probes on base models and testing on instruct reveals selective preservation. Factual representations transfer at 0.85--0.87 accuracy while policy representations transfer at only 0.62--0.63 for preference-optimized models.
+
+    \item \textbf{Training method comparison}: RS + DPO (Llama) compresses representations broadly; DPO + GRPO (Qwen) operates more selectively. Both use DPO but differ in additional methods, suggesting RS vs GRPO create distinct representational profiles.
+
+    \item \textbf{Cross-architecture validation}: We demonstrate consistent effects across Llama, Qwen, Mistral, and Yi, which suggests certain fundamental properties of alignment methods rather than architecture-specific artifacts.
+\end{enumerate}
+
+\subsection{Implications}
+
+Our findings suggest that current alignment techniques achieve epistemic competence through selective steering of representations for trained behaviors. This has implications for interpretability: probe-based monitoring may be less reliable for policy categories where alignment specifically trains outputs, while factual representations remain more accessible.
+
+The preservation of factual geometry offers practical applications: probes trained on base models transfer well to instruct models for factual categories, suggesting potential for monitoring what knowledge is preserved during fine-tuning. The selective steering of policy representations raises questions about whether behavioral alignment and representational transparency can be jointly achieved.
+
+%==============================================================================
+\section{Background and Related Work}
+\label{sec:related}
+%==============================================================================
+
+%------------------------------------------------------------------------------
+\subsection{Epistemic States in Language Models}
+\label{sec:related:epistemic}
+%------------------------------------------------------------------------------
+
+Prior work established that language models represent epistemic states internally. \citet{kadavath2022language} showed models ``know what they know''---internal representations correlate with output correctness. \citet{azaria2023internal} demonstrated that internal states can detect when models are ``lying'' or confabulating. These studies established linear probing as a standard approach for accessing internal epistemic state.
+
+However, prior work primarily asked \emph{whether} models have uncertainty representations, not \emph{what happens to these representations during fine-tuning}. Critically, prior work does not distinguish between trained epistemic behaviors (admitting ignorance when asked about fictional entities) and inherent epistemic states (uncertainty about obscure facts). Our contribution is showing that fine-tuning affects these differently.
+
+%------------------------------------------------------------------------------
+\subsection{Fine-Tuning and Representation Geometry}
+\label{sec:related:geometry}
+%------------------------------------------------------------------------------
+
+Recent work has characterized how fine-tuning affects representation geometry. D-STEER \citep{gao2024dsteer} showed that DPO operates as ``low-rank steering,'' modifying a narrow subspace of activations rather than broadly restructuring representations. The authors argue DPO teaches models ``how to act aligned, not what to believe.''
+
+We extend this finding in two ways: (1) we confirm that low-rank structure generalizes beyond DPO to all fine-tuning methods tested (RLHF, GRPO, SFT-only); and (2) we identify \emph{what gets steered}---specifically, policy categories where epistemic behaviors are trained move further along the alignment direction than factual categories.
+
+%------------------------------------------------------------------------------
+\subsection{Calibration and Overconfidence}
+\label{sec:related:calibration}
+%------------------------------------------------------------------------------
+
+Aligned models show systematic overconfidence in calibration studies. Output entropy becomes less predictive of correctness after fine-tuning, and self-reported confidence often exceeds actual accuracy.
+
+Our work connects these calibration issues to representation-level changes. The selective steering of policy representations---moving them further along the alignment direction---may explain why behavioral epistemic competence improves while internal calibration degrades.
+
+%------------------------------------------------------------------------------
+\subsection{Training Method Taxonomy}
+\label{sec:related:methods}
+%------------------------------------------------------------------------------
+
+We exploit natural variation in fine-tuning methods to characterize different steering profiles:
+
+\begin{itemize}
+    \item \textbf{SFT only}: Mistral, Yi---supervised learning on instruction-following examples
+    \item \textbf{SFT + RS + DPO}: Llama---supervised fine-tuning with rejection sampling and direct preference optimization (multiple rounds)
+    \item \textbf{SFT + DPO + GRPO}: Qwen---supervised fine-tuning with direct preference optimization and group relative policy optimization
+\end{itemize}
+
+Both Llama and Qwen use DPO as their core preference optimization method, but differ in additional techniques: Llama uses rejection sampling (RS), while Qwen uses GRPO. This allows comparing how these additional methods affect representational structure beyond DPO alone.
+
+%==============================================================================
+\section{Methodology}
+\label{sec:methods}
+%==============================================================================
+
+We design an experimental framework to measure how fine-tuning affects the separability of epistemic states in language model representations. Our approach combines category-specific prompts that elicit distinct epistemic situations with linear probing to measure representational separability across base and instruction-tuned model pairs.
+
+%------------------------------------------------------------------------------
+\subsection{Epistemic Category Taxonomy}
+\label{sec:methods:categories}
+%------------------------------------------------------------------------------
+
+We distinguish between two types of epistemic situations based on what constitutes a correct response:
+
+\paragraph{Factual categories.} These require knowledge recall---the model must retrieve and state factual information:
+\begin{itemize}
+    \item \textbf{Confident-correct}: Clear factual questions with high-probability answers (\eg ``What is 2+2?'', ``What is the capital of France?'').
+    \item \textbf{Uncertain-correct}: Obscure but verifiable facts (\eg ``What is the atomic number of molybdenum?'', ``What is the capital of Burkina Faso?'').
+\end{itemize}
+
+\paragraph{Policy categories.} These require trained epistemic behaviors. The model should recognize a meta-property of the question and respond appropriately:
+\begin{itemize}
+    \item \textbf{Confident-incorrect}: Questions about fictional entities where the correct response is to acknowledge the entity does not exist (\eg ``What is the capital of Bugoviana?'').
+    \item \textbf{Ambiguous}: Context-dependent questions where the correct response is to request clarification or acknowledge multiple interpretations (\eg ``What does `bank' mean?'').
+    \item \textbf{Nonsensical}: Category error questions where the correct response is to recognize the question has no valid answer (\eg ``What color is jealousy?'', ``How much does Tuesday weigh?'').
+\end{itemize}
+
+This distinction is important for our design. Fine-tuning explicitly trains policy behaviors, and behavior that is 'human-like', such as admitting ignorance, acknowledging ambiguity, and recognizing nonsense. But it should not fundamentally alter factual knowledge representations.
+
+\begin{table}[t]
+\centering
+\caption{Epistemic category taxonomy with examples and evaluation criteria. Policy categories require trained behaviors; factual categories require knowledge recall.}
+\label{tab:categories}
+\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Category} & \textbf{Type} & \textbf{Example Prompt} & \textbf{Correct Response} \\
+\midrule
+Confident-correct & Factual & ``What is 2+2?'' & States the answer (``4'') \\
+Uncertain-correct & Factual & ``Capital of Burkina Faso?'' & States the answer (``Ouagadougou'') \\
+\midrule
+Confident-incorrect & Policy & ``Capital of Bugoviana?'' & Acknowledges fictional entity \\
+Ambiguous & Policy & ``What does `bank' mean?'' & Requests clarification \\
+Nonsensical & Policy & ``What color is jealousy?'' & Recognizes category error \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%------------------------------------------------------------------------------
+\subsection{Dataset Construction}
+\label{sec:methods:dataset}
+%------------------------------------------------------------------------------
+
+We construct a dataset of 589 prompts distributed across six epistemic categories. The five categories used in the policy-factual comparison are: 157 confident-correct, 100 confident-incorrect, 97 uncertain-correct, 80 ambiguous, and 70 nonsensical prompts.
+
+The dataset also includes 98 \textbf{uncertain-incorrect} prompts (common misconceptions like ``Did Vikings wear horned helmets?''). These are included in general analyses (accuracy, per-category probe performance) but excluded from the policy to factual comparison, because they are both factual and policy-related prompts. Responding correctly requires knowledge (knowing the misconception is false), but they are policy-based in that models can be trained to acknowledge the common misconception before correcting it. This ambiguity makes uncertain-incorrect prompts unsuitable for the binary policy or factual grouping.
+
+\paragraph{Evaluation logic.} We evaluate correctness using category-specific phrase matching, iteratively refined to capture the range of valid response patterns:
+\begin{itemize}
+    \item For \textbf{factual categories}, correctness requires the response to contain the expected answer (case-insensitive substring matching, handling common variations).
+    \item For \textbf{confident-incorrect}, correctness requires acknowledgment phrases indicating the entity does not exist (\eg ``doesn't exist'', ``fictional'', ``not a real country'').
+    \item For \textbf{ambiguous}, correctness requires clarification phrases (\eg ``could you clarify'', ``depends on context'', ``multiple meanings'').
+    \item For \textbf{nonsensical}, correctness requires recognition phrases (\eg ``category error'', ``doesn't have a color'', ``is an abstract concept'').
+\end{itemize}
+
+This phrase-based approach enables automated evaluation. While we iteratively expanded the phrase lists to capture valid response patterns across models, extending to new model families would require identifying their characteristic refusal and ambiguity-acknowledgment styles. We discuss this limitation in Section~\ref{sec:discussion:limitations}.
+
+%------------------------------------------------------------------------------
+\subsection{Models and Activation Extraction}
+\label{sec:methods:models}
+%------------------------------------------------------------------------------
+
+We study four model families, each with base and instruction-tuned variants (8 models total):
+
+\begin{table}[h]
+\centering
+\caption{Models studied and their training methods. This selection enables a natural experiment comparing SFT-only (Mistral, Yi) with RLHF/DPO methods (Llama, Qwen).}
+\label{tab:models}
+\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Family} & \textbf{Model Size} & \textbf{Instruct Training} & \textbf{Primary Language} \\
+\midrule
+Qwen 2.5 & 7B & SFT + DPO + GRPO & Chinese \\
+Llama 3.1 & 8B & SFT + RS + DPO & English \\
+Mistral v0.3 & 7B & SFT only & English \\
+Yi 1.5 & 6B & SFT only & Chinese \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+By including both SFT-only models (Mistral, Yi) and models with preference optimization (Llama, Qwen), we can distinguish the effects of supervised fine-tuning from reinforcement learning methods. Additionally, including models trained primarily on English versus Chinese data allows us to assess whether these findings generalize across training data distributions.
+
+\paragraph{Activation extraction.} We use TransformerLens \citep{nanda2022transformerlens} to extract activations from all residual stream layers at the final token position of each prompt (before generation begins). For each prompt, we obtain an activation matrix $\mathbf{H} \in \mathbb{R}^{L \times d}$ where $L$ is the number of layers and $d$ is the hidden dimension. We flatten this to a single vector $\mathbf{h} \in \mathbb{R}^{Ld}$ for probing.
+
+\paragraph{Prompt formatting.} Both base and instruction-tuned models receive identical prompts in a simple completion format (``Question: \{prompt\} Answer:''). This prompt-controlled design ensures that any observed differences in representations are attributable to model differences rather than prompt differences. We generate responses using greedy decoding (temperature 0) with a maximum of 30 new tokens.
+
+%------------------------------------------------------------------------------
+\subsection{Steering Vector Analysis}
+\label{sec:methods:steering}
+%------------------------------------------------------------------------------
+
+Following D-STEER \citep{gao2024dsteer}, we analyze how fine-tuning steers representations along a low-rank alignment direction.
+
+\paragraph{Steering vector extraction.} For each model family, we compute the alignment direction as the difference in activation centroids:
+\begin{equation}
+\mathbf{v}_{\text{steer}} = \frac{1}{N}\sum_{i=1}^{N} \mathbf{h}_i^{\text{instruct}} - \frac{1}{N}\sum_{i=1}^{N} \mathbf{h}_i^{\text{base}}
+\label{eq:steering}
+\end{equation}
+where $\mathbf{h}_i^{\text{base}}$ and $\mathbf{h}_i^{\text{instruct}}$ are activations for the same prompt in base and instruct models respectively.
+
+\paragraph{Category projections.} We project each sample onto the steering direction and compute mean projections by category:
+\begin{equation}
+\text{Proj}_c = \frac{1}{|S_c|} \sum_{i \in S_c} \frac{\mathbf{h}_i \cdot \mathbf{v}_{\text{steer}}}{\|\mathbf{v}_{\text{steer}}\|}
+\label{eq:projection}
+\end{equation}
+This measures how far each category moves along the alignment direction.
+
+\paragraph{Low-rank analysis.} We perform SVD on the activation difference matrix $\mathbf{D} = \mathbf{X}_{\text{instruct}} - \mathbf{X}_{\text{base}}$ to characterize the dimensionality of alignment changes:
+\begin{equation}
+r_{\text{eff}} = \min\left\{k : \sum_{i=1}^k \sigma_i^2 \geq 0.80 \sum_j \sigma_j^2\right\}
+\label{eq:rank}
+\end{equation}
+where $\sigma_i$ are singular values.
+
+\paragraph{Category loading ratio.} To test whether policy categories are disproportionately affected by alignment changes, we compute how heavily each category loads onto the top SVD components. The SVD gives us $\mathbf{D} = \mathbf{U} \mathbf{\Sigma} \mathbf{V}^\top$, where the rows of $\mathbf{U} \mathbf{\Sigma}$ represent each sample's projection onto the principal components of alignment change. For each category $c$, we compute the mean loading magnitude on the top-$k$ components:
+\begin{equation}
+\text{Loading}_c = \frac{1}{|S_c|} \sum_{i \in S_c} \left\| (\mathbf{U} \mathbf{\Sigma})_{i, 1:k} \right\|_2
+\label{eq:loading}
+\end{equation}
+The \textbf{policy/factual loading ratio} is then:
+\begin{equation}
+\text{Loading Ratio} = \frac{\frac{1}{|P|}\sum_{c \in P} \text{Loading}_c}{\frac{1}{|F|}\sum_{c \in F} \text{Loading}_c}
+\label{eq:loading_ratio}
+\end{equation}
+A ratio greater than 1 indicates policy categories load more heavily onto the alignment subspace than factual categories. We use $k=10$ components and compute bootstrap confidence intervals (1000 iterations) for all ratios.
+
+%------------------------------------------------------------------------------
+\subsection{Linear Probing Protocol}
+\label{sec:methods:probing}
+%------------------------------------------------------------------------------
+
+We train linear probes to predict response correctness from activations:
+\begin{equation}
+\hat{y} = \sigma(\mathbf{w}^\top \mathbf{h} + b)
+\label{eq:probe}
+\end{equation}
+where $\mathbf{h}$ is the flattened activation vector, $\mathbf{w}$ and $b$ are learned parameters, and $\sigma$ is the sigmoid function. We use logistic regression with L2 regularization, trained via 5-fold stratified cross-validation. Activations are standardized (mean 0, variance 1) using statistics computed only on the training fold to prevent data leakage.
+
+%------------------------------------------------------------------------------
+\subsection{Probe Transfer Protocol}
+\label{sec:methods:transfer}
+%------------------------------------------------------------------------------
+
+To test whether fine-tuning preserves epistemic representations, we measure how well probes generalize across base and instruct models:
+
+\paragraph{Base-to-instruct transfer.} We train a probe on base model activations and evaluate it on instruction-tuned model activations for the same prompts. High transfer accuracy indicates that the base model's geometry is preserved after fine-tuning; low transfer indicates potential restructuring.
+
+\paragraph{Category-wise transfer.} We compute transfer accuracy separately for policy and factual categories. The transfer gap quantifies selective geometry preservation:
+\begin{equation}
+\text{Transfer Gap} = \text{Acc}_{\text{factual}}^{B \to I} - \text{Acc}_{\text{policy}}^{B \to I}
+\label{eq:transfer_gap}
+\end{equation}
+A positive gap indicates factual representations are better preserved than policy representations.
+
+%------------------------------------------------------------------------------
+\subsection{Statistical Testing}
+\label{sec:methods:stats}
+%------------------------------------------------------------------------------
+
+We use multiple layers to check statistical robustness:
+
+\paragraph{Sample-level permutation test.} Our primary significance test operates at the sample level rather than the category level, providing substantially higher statistical power. For each sample, we estimate per-sample error using repeated cross-validation splits (100 iterations). We then test whether the mean error change differs between samples from policy versus factual categories using a permutation test with 10,000 permutations.
+
+\paragraph{Bootstrap confidence intervals.} We compute 95\% confidence intervals via 2,000 bootstrap iterations with percentile method.
+
+\paragraph{Multiple comparison correction.} For per-category tests, we apply Benjamini-Hochberg FDR correction to control the false discovery rate.
+
+\paragraph{Seed sensitivity.} We verify result stability by computing coefficient of variation (CV) across 5 random seeds, requiring CV $<$ 5\% for reported metrics.
+
+%==============================================================================
+\section{Results}
+\label{sec:results}
+%==============================================================================
+
+%------------------------------------------------------------------------------
+\subsection{Main Finding: Selective Steering}
+\label{sec:results:main}
+%------------------------------------------------------------------------------
+
+Our central finding is that fine-tuning steers policy representations further along the alignment direction than factual representations.
+
+\begin{table}[t]
+\centering
+\caption{Mean projection of each category type onto the steering vector $\mathbf{v}_{\text{steer}}$. Policy categories consistently move further than factual categories. All ratios significantly $> 1.0$ at $p < 0.001$ via bootstrap (1000 iterations).}
+\label{tab:steering}
+\small
+\begin{tabular}{@{}llrrr@{}}
+\toprule
+\textbf{Model} & \textbf{Training} & \textbf{Ratio} & \textbf{95\% CI} \\
+\midrule
+Llama 3.1 & SFT + RS + DPO & 1.28$\times$ & [1.23, 1.33] \\
+Qwen 2.5 & SFT + DPO + GRPO & 1.11$\times$ & [1.08, 1.15] \\
+Mistral & SFT only & 1.10$\times$ & [1.05, 1.14] \\
+Yi 1.5 & SFT only & 1.08$\times$ & [1.05, 1.11] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Policy categories move 1.08--1.28$\times$ further along the alignment direction than factual categories. The effect is largest for Llama (1.28$\times$), which uses the most extensive preference optimization (SFT + RS + DPO). This confirms the selective steering hypothesis: fine-tuning disproportionately affects representations for categories where it trains specific epistemic behaviors.
+
+\paragraph{Low-rank structure.} Following D-STEER, we analyze the dimensionality of alignment changes via SVD on the activation difference matrix.
+
+\begin{table}[h]
+\centering
+\caption{Effective rank (dimensions for 80\% variance) shows alignment changes concentrate in a low-rank subspace across all training methods. Loading ratio measures how heavily policy categories load on top-10 SVD components relative to factual categories.}
+\label{tab:lowrank}
+\small
+\begin{tabular}{@{}llrrr@{}}
+\toprule
+\textbf{Model} & \textbf{Training} & \textbf{Eff.\ Rank} & \textbf{Loading Ratio} & \textbf{95\% CI} \\
+\midrule
+Llama 3.1 & SFT + RS + DPO & 19 & 1.30$\times$* & [1.23, 1.37] \\
+Yi 1.5 & SFT only & 19 & 0.97$\times$ & [0.93, 1.00] \\
+Mistral & SFT only & 18 & 0.90$\times$ & [0.85, 0.94] \\
+Qwen 2.5 & SFT + DPO + GRPO & 14 & 0.89$\times$ & [0.84, 0.94] \\
+\bottomrule
+\multicolumn{5}{l}{\footnotesize *Significantly $> 1.0$ at $p < 0.001$; others not significant or inverted.}
+\end{tabular}
+\end{table}
+
+Low-rank structure (14--19 dimensions) generalizes to all fine-tuning methods, confirming D-STEER's finding that alignment operates via narrow subspace modification. However, the relationship between policy/factual categories and SVD loading is model-dependent: only Llama shows policy categories loading significantly more heavily on alignment-relevant components. This suggests the selective steering effect observed in the mean alignment direction (Table~\ref{tab:steering}) does not uniformly concentrate in the top SVD components across models.
+
+%------------------------------------------------------------------------------
+\subsection{Probe Transfer Confirms Selective Preservation}
+\label{sec:results:transfer}
+%------------------------------------------------------------------------------
+
+To directly test whether fine-tuning warps policy representations while preserving factual ones, we train probes on base model activations and test them on instruction-tuned model activations. If representations are preserved, transfer accuracy should remain high; if warped, transfer should degrade.
+
+\begin{table}[t]
+\centering
+\caption{Probe transfer accuracy (train on base, test on instruct). For preference-optimized models, factual categories transfer well while policy categories show substantial degradation.}
+\label{tab:transfer}
+\small
+\begin{tabular}{@{}llrrr@{}}
+\toprule
+\textbf{Model} & \textbf{Training} & \textbf{Factual Acc.} & \textbf{Policy Acc.} & \textbf{Gap} \\
+\midrule
+Qwen 2.5 & SFT + DPO + GRPO & 0.873 & 0.632 & +0.241 \\
+Llama 3.1 & SFT + RS + DPO & 0.849 & 0.624 & +0.225 \\
+\midrule
+Mistral & SFT only & 0.916 & 0.898 & +0.018 \\
+Yi 1.5 & SFT only & 0.871 & 0.675 & +0.196 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The preference-optimized models (Qwen, Llama) show clear asymmetry: probes trained on base models achieve high accuracy on factual categories (0.85--0.87) but substantially degraded accuracy on policy categories (0.62--0.63) when applied to instruct models. This demonstrates that fine-tuning selectively preserves the geometry of factual representations while restructuring policy-relevant dimensions.
+
+\paragraph{SFT-only models show smaller gaps.} Mistral shows minimal transfer gap (+0.018), suggesting SFT-only training preserves both category types relatively well. Yi shows an intermediate gap (+0.196), suggesting some selective effect even without preference optimization. This pattern aligns with the steering analysis: preference optimization creates more targeted representational changes.
+
+%------------------------------------------------------------------------------
+\subsection{Training Method Comparison}
+\label{sec:results:training}
+%------------------------------------------------------------------------------
+
+We observe distinct profiles for different training methods by examining how category centroids converge or diverge during fine-tuning.
+
+\begin{table}[t]
+\centering
+\caption{Centroid distance changes during fine-tuning. Negative values indicate categories moving closer (convergence); positive values indicate divergence. RS + DPO (Llama) compresses broadly; DPO + GRPO (Qwen) operates more selectively.}
+\label{tab:convergence}
+\small
+\begin{tabular}{@{}llrr@{}}
+\toprule
+\textbf{Model} & \textbf{Training} & \textbf{Policy $\Delta$\%} & \textbf{Factual $\Delta$\%} \\
+\midrule
+Llama 3.1 & SFT + RS + DPO & $-$16.3\% & $-$11.2\% \\
+Qwen 2.5 & SFT + DPO + GRPO & $-$3.4\% & +3.4\% \\
+\midrule
+Mistral & SFT only & +16.8\% & +66.3\% \\
+Yi 1.5 & SFT only & +7.6\% & +7.0\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{RS + DPO compresses broadly.} Llama shows convergence for both category types (policy $-$16.3\%, factual $-$11.2\%), indicating rejection sampling with DPO compresses the entire representation space. Policy categories converge slightly more.
+
+\paragraph{DPO + GRPO operates selectively.} Qwen shows selective convergence: policy categories converge ($-$3.4\%) while factual categories actually diverge (+3.4\%). This pattern suggests adding GRPO to DPO reduces overall epistemic compression.
+
+\paragraph{SFT-only shows divergence or mixed effects.} Mistral and Yi both show divergence (positive values), with Mistral showing dramatically different effects for policy (+16.8\%) versus factual (+66.3\%). This suggests that SFT, alone, might generate more separable categorical representations in the underlying reasoning structure.
+
+%------------------------------------------------------------------------------
+\subsection{Supporting Evidence: Probe Accuracy and Robustness}
+\label{sec:results:robustness}
+%------------------------------------------------------------------------------
+
+We verify that linear separability is maintained despite the steering effects.
+
+\begin{table}[h]
+\centering
+\caption{Probe and entropy AUC before and after fine-tuning. Probe AUC measures linear separability of correct/incorrect responses in activation space; entropy AUC measures how well output entropy predicts correctness.}
+\label{tab:probe_auc}
+\small
+\begin{tabular}{@{}llrrrr@{}}
+\toprule
+& & \multicolumn{2}{c}{\textbf{Base}} & \multicolumn{2}{c}{\textbf{Instruct}} \\
+\cmidrule(lr){3-4} \cmidrule(lr){5-6}
+\textbf{Model} & \textbf{Training} & \textbf{Entropy} & \textbf{Probe} & \textbf{Entropy} & \textbf{Probe} \\
+\midrule
+Mistral & SFT only & 0.93 & 0.95 & 0.74 & 0.82 \\
+Llama 3.1 & SFT + RS + DPO & 0.91 & 0.92 & 0.73 & 0.82 \\
+Yi 1.5 & SFT only & 0.82 & 0.90 & 0.65 & 0.86 \\
+Qwen 2.5 & SFT + DPO + GRPO & 0.79 & 0.90 & 0.55 & 0.82 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Linear probes still achieve 0.82--0.86 AUC after fine-tuning, indicating that representations remain linearly separable. The steering effect does not reduce linear structure.
+
+\paragraph{Prompt-controlled design.} Our results use identical prompts for base and instruct models, ensuring observed differences reflect model changes rather than prompt effects. 
+
+%------------------------------------------------------------------------------
+\subsection{Cross-Architecture Consistency}
+\label{sec:results:crossarch}
+%------------------------------------------------------------------------------
+
+One contribution of this work is demonstrating that selective steering is not an artifact of a single model architecture. Despite differences in architecture (Llama-derived vs.\ custom), training data (English vs.\ Chinese primary), and model scale (6B--8B), we observe:
+
+\begin{enumerate}
+    \item All four models show policy categories moving further along the alignment direction (1.08--1.28$\times$, all $p < 0.001$)
+    \item Low-rank structure (14--19 dimensions) is consistent across all training methods
+    \item Preference-optimized models show asymmetric probe transfer (high factual, lower policy)
+\end{enumerate}
+
+However, the SVD loading pattern is \emph{not} consistent: only Llama shows policy loading more heavily on top components (1.30$\times$); other models show different patterns. This suggests the steering ratio and SVD loading capture different aspects of representational change.
+
+%==============================================================================
+\section{Analysis}
+\label{sec:analysis}
+%==============================================================================
+
+%------------------------------------------------------------------------------
+\subsection{Why Does Fine-Tuning Selectively Steer Policy?}
+\label{sec:analysis:why}
+%------------------------------------------------------------------------------
+
+Our findings extend D-STEER's characterization of fine-tuning as ``low-rank steering.'' We confirm that alignment changes concentrate in 14--19 dimensions (Table~\ref{tab:lowrank}), generalizing the low-rank structure to all training methods tested.
+
+\paragraph{What gets steered.} The steering ratio (Table~\ref{tab:steering}) shows policy categories consistently move 1.08--1.28$\times$ further along the alignment direction than factual categories. This is robust across all four model families ($p < 0.001$ via bootstrap). However, the relationship to SVD structure is model-dependent: only Llama (RS + DPO) shows policy loading more heavily on top components; Qwen (DPO + GRPO) shows the opposite pattern. This suggests the steering effect operates along the mean alignment direction but does not uniformly concentrate in top SVD components.
+
+\paragraph{Hypothesis.} The training signal specifically targets policy behaviors. Fine-tuning trains models to admit ignorance, acknowledge ambiguity, and recognize nonsense. This targeted training steers the representations underlying those behaviors further along the alignment direction, while factual recall is relatively preserved. The different SVD loading patterns between RS + DPO and DPO + GRPO suggest these methods achieve similar steering effects through different subspace modifications.
+
+%------------------------------------------------------------------------------
+\subsection{Training Method Effects}
+\label{sec:analysis:training_effects}
+%------------------------------------------------------------------------------
+
+Different training methods produce distinct steering profiles:
+
+\paragraph{RS + DPO compresses broadly.} Llama (SFT + RS + DPO) shows convergence for both category types: policy categories converge 16.3\% and factual categories converge 11.2\% (Table~\ref{tab:convergence}). The entire representation space compresses toward the alignment direction, though policy categories move slightly further. Notably, Llama is the only model where policy categories load significantly more heavily on top SVD components (1.30$\times$, Table~\ref{tab:lowrank}).
+
+\paragraph{DPO + GRPO operates selectively.} Qwen (SFT + DPO + GRPO) shows selective convergence: policy categories converge 3.4\% while factual categories \emph{diverge} 3.4\%. This striking pattern suggests adding GRPO to DPO specifically reduces epistemic compression. Interestingly, Qwen shows \emph{inverted} SVD loading: factual categories load more heavily on top components (0.89$\times$), opposite to Llama.
+
+\paragraph{SFT-only causes different restructuring.} Mistral and Yi both show divergence rather than convergence, with Mistral showing dramatically different effects for policy (+16.8\%) versus factual (+66.3\%). This pattern contrasts with the targeted effects of preference optimization, and may suggest that SFT-only models generate a category-based reasoning style that generates more epistemic separation.
+
+%------------------------------------------------------------------------------
+\subsection{Representations Change But Remain Separable}
+\label{sec:analysis:separability}
+%------------------------------------------------------------------------------
+
+Despite the selective steering effect, linear separability is preserved. Probes achieve 0.82--0.86 AUC after fine-tuning across all models (Table~\ref{tab:probe_auc}). The steering effect moves representations along directions that preserve their linear separability.
+
+This preservation of separability indicates that representational reorganization during alignment is \emph{structured}. Fine-tuning steers policy representations further along the alignment direction, but this steering can maintain the geometric relationships that allow linear probes to distinguish correct from incorrect responses. The consistency of this pattern across four architectures (Llama, Qwen, Mistral, Yi), two training data distributions (English, Chinese), and multiple fine-tuning methods (SFT, RS+DPO, DPO+GRPO) suggests this structured reorganization is a fundamental property of current alignment techniques rather than an artifact of particular models.
+
+%------------------------------------------------------------------------------
+\subsection{Predictable Reorganization Accompanies Behavioral Gains}
+\label{sec:analysis:behavioral}
+%------------------------------------------------------------------------------
+
+Behavioral performance improves dramatically after fine-tuning, especially for policy categories:
+
+\begin{table}[h]
+\centering
+\caption{Behavioral accuracy before and after fine-tuning. Policy accuracy improves substantially while representations are selectively steered.}
+\label{tab:behavioral}
+\small
+\begin{tabular}{@{}llrrrr@{}}
+\toprule
+& & \multicolumn{2}{c}{\textbf{Factual Acc.}} & \multicolumn{2}{c}{\textbf{Policy Acc.}} \\
+\cmidrule(lr){3-4} \cmidrule(lr){5-6}
+\textbf{Model} & \textbf{Training} & \textbf{Base} & \textbf{Inst.} & \textbf{Base} & \textbf{Inst.} \\
+\midrule
+Qwen 2.5 & SFT + DPO + GRPO & 81\% & 94\% & 5\% & 63\% \\
+Llama 3.1 & SFT + RS + DPO & 91\% & 95\% & 5\% & 56\% \\
+Mistral & SFT only & 91\% & 91\% & 3\% & 35\% \\
+Yi 1.5 & SFT only & 83\% & 88\% & 2\% & 27\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Base models, as expected, achieve near-zero policy accuracy. They don't admit ignorance, acknowledge ambiguity, or recognize nonsense. Fine-tuning fixes this behaviorally (+50--60pp for preference-optimized models, +25--30pp for SFT-only). Better behavior comes with \emph{predictable} representational reorganization that particularly affects policy categories.
+
+The consistency of this pattern across architectures is notable. All four model families show the same qualitative effect: behavioral gains for policy categories accompanied by selective steering of those categories' representations (1.08--1.28$\times$ further along the alignment direction than factual categories). This cross-architecture consistency suggests the reorganization pattern may generalize to new models and alignment methods, rather than being an artifact of particular training choices.
+
+%==============================================================================
+\section{Discussion}
+\label{sec:discussion}
+%==============================================================================
+
+%------------------------------------------------------------------------------
+\subsection{Implications for Alignment}
+\label{sec:discussion:implications}
+%------------------------------------------------------------------------------
+
+Our findings have several implications for alignment research and interpretability:
+
+\paragraph{1. Selective steering is a fundamental property of alignment, not model-specific.} The consistency of our findings across four model families is striking. All models show policy categories moving 1.08--1.28$\times$ further along the alignment direction than factual categories (all $p < 0.001$). Low-rank structure (14--19 dimensions) is confirmed across all training methods. This cross-architecture consistency suggests selective steering will generalize to new models and alignment methods, making it a predictable property that could inform interpretability research.
+
+\paragraph{2. Training methods create distinguishable representational profiles.} RS + DPO (Llama) compresses representations broadly, with both policy and factual categories converging toward the alignment direction. DPO + GRPO (Qwen) operates more selectively---policy categories converge while factual categories actually \emph{diverge}. These distinct profiles suggest that understanding the representational effects of different alignment methods could inform alignment method choice. When factual preservation is prioritized, methods with more selective steering profiles may be preferable.
+
+\paragraph{3. Steering analysis reveals structure that probe accuracy misses.} With prompt-controlled data, probe accuracy differences between base and instruct are modest (0.82--0.86 AUC for both). But steering analysis and probe transfer reveal clear asymmetry in how categories are affected. This methodological finding suggests that probe accuracy alone is an incomplete measure of representational change. We recommend using directional methods (steering vector analysis, probe transfer) alongside accuracy-based metrics for characterizing alignment effects.
+
+%------------------------------------------------------------------------------
+\subsection{Methodological Contribution}
+\label{sec:discussion:methods}
+%------------------------------------------------------------------------------
+
+Our work extends D-STEER's characterization of fine-tuning as low-rank steering. While D-STEER showed that DPO modifies a narrow subspace, we identify \emph{what} gets steered within that subspace: policy categories move further along the alignment direction than factual categories. We further show that different training methods (RS + DPO vs DPO + GRPO vs SFT-only) create distinguishable steering profiles, providing a framework for characterizing alignment methods by their representational effects.
+
+%------------------------------------------------------------------------------
+\subsection{Limitations}
+\label{sec:discussion:limitations}
+%------------------------------------------------------------------------------
+
+\paragraph{Phrase-based evaluation.} Our correctness labels rely on phrase matching rather than human annotation. While we iteratively refined phrase lists to capture valid response patterns, error rates may be non-negligible. Extending to new model families would require identifying their characteristic refusal and ambiguity-acknowledgment styles.
+
+\paragraph{Correlation, not causation.} We observe that fine-tuning correlates with selective steering, but we cannot isolate specific training components. Models differ in multiple ways (SFT data, preference optimization method, training scale), making causal claims difficult.
+
+\paragraph{Limited model scale.} All models studied are in the 6--8B parameter range. Larger models may exhibit different patterns of steering or preservation.
+
+\paragraph{Cannot isolate training components.} While we compare SFT-only versus preference-optimized models, we cannot isolate the effects of specific training choices (SFT data composition, preference pair selection, optimization hyperparameters). The training method comparison should be interpreted as characterizing broad patterns rather than precise causal effects.
+
+\paragraph{Uncertain-incorrect ambiguity.} The uncertain-incorrect category (common misconceptions) is excluded from the policy-factual comparison because it requires both knowledge recall and behavioral acknowledgment. Its intermediate nature limits the cleanness of our binary grouping.
+
+%------------------------------------------------------------------------------
+\subsection{Future Work}
+\label{sec:discussion:future}
+%------------------------------------------------------------------------------
+
+Several directions would strengthen or extend these findings:
+
+\begin{enumerate}
+    \item \textbf{Steering-aware fine-tuning}: Design objectives that preserve factual geometry while allowing policy steering. This could test whether the selective effect is avoidable.
+
+    \item \textbf{Intermediate checkpoint analysis}: Analyze how steering develops across training steps to identify when policy representations begin moving further than factual ones.
+
+    \item \textbf{Larger models}: Test whether 70B+ models show the same patterns or if scale provides different steering dynamics.
+
+    \item \textbf{Category-specific subspace analysis}: Our ablation results suggest steering may occur in category-specific subspaces rather than the mean alignment direction. More targeted analysis could identify these subspaces.
+
+    \item \textbf{SFT-induced categorical structure}: Our SFT-only models (Mistral, Yi) show divergence rather than convergence, with Mistral showing dramatically increased separation between policy and factual representations. This suggests SFT may drive models toward more categorical reasoning structures. Investigating this effect---whether it reflects explicit category formation or a byproduct of imitation learning---could inform how different training objectives shape internal representations.
+\end{enumerate}
+
+%==============================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+%==============================================================================
+
+We have shown that fine-tuning selectively steers policy representations along low-rank alignment directions. Across four model families with different architectures, training data, and fine-tuning methods, we find a consistent pattern: policy categories---where fine-tuning trains specific epistemic behaviors---move 1.08--1.28$\times$ further along the alignment direction than factual categories (all $p < 0.001$). Low-rank structure is confirmed across all models (14--19 dimensions capture 80\% of alignment variance), though the relationship between category type and SVD loading is model-dependent rather than universal.
+
+Probe transfer experiments confirm this selective effect: training probes on base models and testing on instruction-tuned variants reveals factual representations transfer at 0.85--0.87 accuracy while policy representations transfer at only 0.62--0.63 for preference-optimized models. The geometry of factual knowledge is preserved while the geometry of trained epistemic behaviors is reorganized.
+
+Training method comparison reveals distinct profiles: RS + DPO (Llama) compresses representations broadly and concentrates policy in top SVD components, while DPO + GRPO (Qwen) operates more selectively with inverted SVD loading. Both methods use DPO but differ in additional techniques (rejection sampling vs.\ GRPO), suggesting these create distinguishable representational profiles. Notably, SFT-only models (Mistral, Yi) show divergence rather than convergence, with Mistral exhibiting dramatically increased separation between categories---suggesting SFT may drive models toward more categorical structures, a pattern worth further investigation.
+
+Our cross-architecture validation suggests selective steering is not an artifact of particular models but a characteristic property of how current preference-optimization techniques interact with epistemic representations. These findings provide a framework for characterizing how different alignment methods affect internal representations, complementing behavioral evaluations with representational analysis.
+
+%==============================================================================
+% References
+%==============================================================================
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+%==============================================================================
+% Appendices
+%==============================================================================
+
+\appendix
+
+\section{Evaluation Logic Details}
+\label{app:evaluation}
+
+We evaluate model responses using category-specific phrase matching. For each category, we define a set of phrases that indicate a correct response. A response is marked correct if it contains any phrase from the relevant set (case-insensitive substring matching).
+
+\paragraph{Factual categories.} For \textbf{confident-correct} and \textbf{uncertain-correct}, correctness requires the response to contain the expected answer. We use case-insensitive substring matching with support for alternative answers separated by ``/'' (\eg ``carbon dioxide/CO2'').
+
+\paragraph{Confident-incorrect (53 phrases).} The model should acknowledge that the fictional entity does not exist. Representative phrases:
+\begin{itemize}
+    \item \textbf{Existence denials}: ``doesn't exist'', ``does not exist'', ``fictional'', ``not real'', ``made up'', ``no such'', ``isn't real'', ``not a real'', ``fabricated'', ``imaginary'', ``hypothetical''
+    \item \textbf{Uncertainty expressions}: ``i don't know'', ``i'm not sure'', ``cannot find'', ``no information'', ``don't have enough information'', ``not aware of'', ``unable to find''
+    \item \textbf{Geographic non-existence}: ``no country'', ``not a country'', ``has no capital'', ``not a recognized country''
+    \item \textbf{Specificity denials}: ``not specified'', ``is unknown'', ``no reliable source'', ``cannot be determined''
+\end{itemize}
+
+\paragraph{Ambiguous (39 phrases).} The model should request clarification or acknowledge multiple meanings. Representative phrases:
+\begin{itemize}
+    \item \textbf{Clarification requests}: ``could you clarify'', ``what do you mean'', ``need more context'', ``which'', ``what specifically'', ``without more context''
+    \item \textbf{Multiple meanings}: ``can mean'', ``can refer to'', ``could mean'', ``multiple meanings'', ``different meanings'', ``several definitions''
+    \item \textbf{Dependency acknowledgment}: ``depends on'', ``it depends'', ``depending on''
+    \item \textbf{Inability to answer}: ``cannot determine'', ``unable to answer'', ``impossible to answer'', ``cannot be answered without''
+\end{itemize}
+
+\paragraph{Nonsensical (26 phrases).} The model should recognize the category error. Representative phrases:
+\begin{itemize}
+    \item \textbf{Sense denials}: ``doesn't make sense'', ``does not make sense'', ``meaningless'', ``nonsensical''
+    \item \textbf{Property denials}: ``has no mass'', ``has no weight'', ``has no color'', ``has no taste'', ``does not have a''
+    \item \textbf{Category recognition}: ``is an emotion'', ``is an abstract'', ``is a concept'', ``is a day of the week'', ``is not a physical object''
+    \item \textbf{Measurement impossibility}: ``cannot be weighed'', ``cannot be measured'', ``can't be tasted''
+\end{itemize}
+
+\paragraph{Uncertain-incorrect (12 phrases).} The model should debunk the misconception. Representative phrases:
+\begin{itemize}
+    \item ``myth'', ``misconception'', ``not true'', ``false'', ``incorrect'', ``actually'', ``contrary to'', ``debunked'', ``no evidence''
+\end{itemize}
+
+\paragraph{Limitations.} This phrase-based approach enables automated evaluation at scale but has limitations: (1) it may miss valid responses that use different phrasing; (2) it may incorrectly accept responses that contain a phrase but in a different context; (3) extending to new model families requires identifying their characteristic response styles. We iteratively expanded phrase lists by examining false negatives across all eight models, but error rates may be non-negligible.
+
+\section{Model Details}
+\label{app:models}
+
+\begin{table}[h]
+\centering
+\caption{Model specifications for reproducibility. All models are in the 6--8B parameter range with 28--32 transformer layers, accessed via HuggingFace Hub.}
+\label{tab:model_details}
+\small
+\begin{tabular}{@{}lllrr@{}}
+\toprule
+\textbf{Family} & \textbf{Variant} & \textbf{HuggingFace Model ID} & \textbf{Layers} & \textbf{Hidden} \\
+\midrule
+Qwen 2.5 & Base & \texttt{Qwen/Qwen2.5-7B} & 28 & 3584 \\
+Qwen 2.5 & Instruct & \texttt{Qwen/Qwen2.5-7B-Instruct} & 28 & 3584 \\
+\midrule
+Llama 3.1 & Base & \texttt{meta-llama/Llama-3.1-8B} & 32 & 4096 \\
+Llama 3.1 & Instruct & \texttt{meta-llama/Llama-3.1-8B-Instruct} & 32 & 4096 \\
+\midrule
+Mistral v0.3 & Base & \texttt{mistralai/Mistral-7B-v0.1} & 32 & 4096 \\
+Mistral v0.3 & Instruct & \texttt{mistralai/Mistral-7B-Instruct-v0.1} & 32 & 4096 \\
+\midrule
+Yi 1.5 & Base & \texttt{01-ai/Yi-6B} & 32 & 4096 \\
+Yi 1.5 & Instruct & \texttt{01-ai/Yi-6B-Chat} & 32 & 4096 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Generation parameters.} All models used identical generation parameters:
+\begin{itemize}
+    \item \textbf{Max new tokens}: 30 (sufficient for short factual answers)
+    \item \textbf{Temperature}: 0 (greedy decoding for determinism)
+    \item \textbf{Random seed}: 42
+\end{itemize}
+
+\paragraph{Activation extraction.} We use TransformerLens \citep{nanda2022transformerlens} to extract activations from the residual stream at all layers. For probing, we use activations at the final token position (the last token of the prompt before generation begins) and concatenate across all layers to form a single feature vector $\mathbf{h} \in \mathbb{R}^{L \times d}$ where $L$ is the number of layers and $d$ is the hidden dimension.
+
+\paragraph{Prompt format.} Both base and instruction-tuned models receive identical prompts:
+\begin{verbatim}
+Question: {prompt}
+Answer:
+\end{verbatim}
+This prompt-controlled design ensures observed differences are attributable to model fine-tuning rather than prompt structure differences.
+
+\section{Additional Results}
+\label{app:results}
+
+\subsection{Token Position Analysis}
+
+We extracted activations at three token positions: first (beginning of prompt), middle (sequence midpoint), and last (final token before generation). The last token position consistently provided the best probe performance across all models, which aligns with prior work showing that later positions aggregate more semantic information. All main results use last-token activations.
+
+\subsection{Per-Category Confidence Intervals}
+
+\begin{table}[h]
+\centering
+\caption{Probe error rates (1 $-$ accuracy) by category with 95\% bootstrap CIs (2,000 iterations, percentile method). Error rates computed via 5-fold cross-validation. Policy categories show larger error increases after fine-tuning for preference-optimized models.}
+\label{tab:category_cis}
+\small
+\begin{tabular}{@{}llrrrr@{}}
+\toprule
+& & \multicolumn{2}{c}{\textbf{Policy Error}} & \multicolumn{2}{c}{\textbf{Factual Error}} \\
+\cmidrule(lr){3-4} \cmidrule(lr){5-6}
+\textbf{Model} & \textbf{Variant} & \textbf{Mean} & \textbf{95\% CI} & \textbf{Mean} & \textbf{95\% CI} \\
+\midrule
+\multirow{2}{*}{Qwen 2.5} & Base & 0.12 & [0.08, 0.16] & 0.08 & [0.05, 0.11] \\
+& Instruct & 0.19 & [0.14, 0.24] & 0.10 & [0.07, 0.14] \\
+\midrule
+\multirow{2}{*}{Llama 3.1} & Base & 0.10 & [0.06, 0.14] & 0.09 & [0.06, 0.12] \\
+& Instruct & 0.18 & [0.13, 0.23] & 0.12 & [0.08, 0.16] \\
+\midrule
+\multirow{2}{*}{Mistral} & Base & 0.08 & [0.05, 0.12] & 0.06 & [0.03, 0.09] \\
+& Instruct & 0.15 & [0.10, 0.20] & 0.14 & [0.10, 0.19] \\
+\midrule
+\multirow{2}{*}{Yi 1.5} & Base & 0.11 & [0.07, 0.15] & 0.10 & [0.06, 0.14] \\
+& Instruct & 0.16 & [0.11, 0.21] & 0.13 & [0.09, 0.18] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+For preference-optimized models (Qwen, Llama), policy error increases more than factual error after fine-tuning: Qwen shows +0.07 policy vs +0.02 factual; Llama shows +0.08 policy vs +0.03 factual. SFT-only models show more uniform changes.
+
+\subsection{Effect Sizes}
+
+\begin{table}[h]
+\centering
+\caption{Cohen's $d$ effect sizes for activation differences (correct vs incorrect) along the steering direction, computed separately for policy and factual categories. Larger values indicate greater separability.}
+\label{tab:effect_sizes}
+\small
+\begin{tabular}{@{}llrr@{}}
+\toprule
+\textbf{Model} & \textbf{Variant} & \textbf{Policy $d$} & \textbf{Factual $d$} \\
+\midrule
+\multirow{2}{*}{Qwen 2.5} & Base & 0.82 & 0.91 \\
+& Instruct & 0.65 & 0.84 \\
+\midrule
+\multirow{2}{*}{Llama 3.1} & Base & 0.89 & 0.95 \\
+& Instruct & 0.71 & 0.88 \\
+\midrule
+\multirow{2}{*}{Mistral} & Base & 0.94 & 0.97 \\
+& Instruct & 0.76 & 0.82 \\
+\midrule
+\multirow{2}{*}{Yi 1.5} & Base & 0.85 & 0.88 \\
+& Instruct & 0.72 & 0.81 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Effect sizes decrease after fine-tuning for both category types, but the decrease is larger for policy categories. This aligns with the steering analysis: policy representations are steered further along the alignment direction, which compresses differences between correct and incorrect responses within that category type.
+
+\section{Statistical Details}
+\label{app:stats}
+
+\subsection{Permutation Test Procedure}
+
+Our primary significance test uses a sample-level permutation test to compare steering ratios between policy and factual categories. The procedure:
+
+\begin{algorithm}[h]
+\caption{Sample-Level Permutation Test for Steering Ratio}
+\label{alg:permutation}
+\begin{algorithmic}[1]
+\State \textbf{Input:} Activations $\mathbf{X}$, category labels $c_i$, steering vector $\mathbf{v}$
+\State Compute projections: $p_i = \mathbf{x}_i \cdot \mathbf{v} / \|\mathbf{v}\|$ for each sample
+\State Compute observed ratio: $R_{\text{obs}} = \text{mean}(p_i : c_i \in \text{Policy}) / \text{mean}(p_i : c_i \in \text{Factual})$
+\For{$b = 1$ to $B$} \Comment{$B = 10{,}000$ permutations}
+    \State Randomly permute category labels $c_i$
+    \State Compute permuted ratio $R_b$
+\EndFor
+\State $p$-value $= \frac{1 + \sum_{b=1}^{B} \mathbf{1}[R_b \geq R_{\text{obs}}]}{B + 1}$
+\end{algorithmic}
+\end{algorithm}
+
+This sample-level approach provides substantially higher statistical power than category-level tests because it operates on $n \approx 300$ samples per group rather than 3--5 category means.
+
+\subsection{Bootstrap Confidence Intervals}
+
+We compute 95\% confidence intervals using the percentile bootstrap method:
+
+\begin{enumerate}
+    \item Draw $B = 2{,}000$ bootstrap samples with replacement from the original data
+    \item Compute the statistic of interest for each bootstrap sample
+    \item Report the 2.5th and 97.5th percentiles as the 95\% CI bounds
+\end{enumerate}
+
+For steering ratios, we bootstrap over samples while preserving category membership. For probe accuracy, we bootstrap over cross-validation folds.
+
+\subsection{Multiple Comparison Correction}
+
+When conducting per-category tests (5 categories $\times$ 4 models = 20 tests), we apply Benjamini-Hochberg FDR correction at $\alpha = 0.05$. This controls the expected false discovery rate rather than the family-wise error rate, providing a less conservative correction appropriate for exploratory analyses.
+
+The BH procedure:
+\begin{enumerate}
+    \item Sort $p$-values: $p_{(1)} \leq p_{(2)} \leq \cdots \leq p_{(m)}$
+    \item Find the largest $k$ such that $p_{(k)} \leq \frac{k}{m} \alpha$
+    \item Reject hypotheses $H_{(1)}, \ldots, H_{(k)}$
+\end{enumerate}
+
+\subsection{Sample-Level vs Category-Level Testing}
+
+We chose sample-level testing as our primary approach because:
+\begin{itemize}
+    \item \textbf{Power}: With $n \approx 300$ samples per group vs 3--5 categories, sample-level tests have dramatically higher power to detect real effects
+    \item \textbf{Variance estimation}: Sample-level tests properly account for within-category variance, which category-level means obscure
+    \item \textbf{Generalization}: Results reflect effects on individual prompts, not just category averages
+\end{itemize}
+
+We report category-level breakdowns for interpretability but base significance claims on sample-level tests.
+
+\subsection{Seed Sensitivity Analysis}
+
+To verify result stability, we computed all main metrics across 5 random seeds (42, 123, 456, 789, 1000) and required coefficient of variation (CV) $< 5\%$ for reported values:
+\[
+\text{CV} = \frac{\sigma_{\text{seeds}}}{\mu_{\text{seeds}}} \times 100\%
+\]
+
+All steering ratios and probe transfer gaps met this threshold. The largest observed CV was 3.2\% for the Yi steering ratio, indicating stable results across random initialization.
+
+\end{document}

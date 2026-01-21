@@ -58,6 +58,249 @@ def _effect_size_label(d: float) -> str:
         return "large"
 
 
+def bootstrap_steering_ratio(
+    base_data: ModelData,
+    instruct_data: ModelData,
+    position: str = 'last',
+    layer: Optional[int] = None,
+    n_bootstrap: int = 1000,
+    confidence: float = 0.95,
+    print_output: bool = True
+) -> Dict:
+    """
+    Compute bootstrap confidence intervals for the policy/factual steering ratio.
+
+    This provides statistical support for the main finding that policy categories
+    move further along the alignment direction than factual categories.
+
+    Args:
+        base_data: ModelData for base model
+        instruct_data: ModelData for instruct model
+        position: Token position
+        layer: Specific layer or None
+        n_bootstrap: Number of bootstrap iterations
+        confidence: Confidence level for intervals
+        print_output: Whether to print results
+
+    Returns:
+        Dictionary with point estimates and bootstrap CIs
+    """
+    from .loader import get_activation_matrix
+
+    X_base = get_activation_matrix(base_data, position, layer)
+    X_instruct = get_activation_matrix(instruct_data, position, layer)
+
+    categories = base_data.df['category'].values
+
+    # Compute steering vector
+    steering_vector = X_instruct.mean(axis=0) - X_base.mean(axis=0)
+    steering_norm = np.linalg.norm(steering_vector)
+    steering_unit = steering_vector / steering_norm if steering_norm > 0 else steering_vector
+
+    # Compute per-sample movement along steering direction
+    D = X_instruct - X_base  # Per-sample change
+    projections = D @ steering_unit  # Project onto steering direction
+
+    # Get masks
+    policy_mask = np.isin(categories, POLICY_CATEGORIES)
+    factual_mask = np.isin(categories, FACTUAL_CATEGORIES)
+
+    policy_projs = projections[policy_mask]
+    factual_projs = projections[factual_mask]
+
+    # Point estimates
+    policy_mean = np.mean(policy_projs)
+    factual_mean = np.mean(factual_projs)
+    ratio = policy_mean / factual_mean if factual_mean != 0 else np.inf
+    difference = policy_mean - factual_mean
+
+    # Bootstrap
+    np.random.seed(42)
+    bootstrap_ratios = []
+    bootstrap_diffs = []
+    bootstrap_policy = []
+    bootstrap_factual = []
+
+    n_policy = len(policy_projs)
+    n_factual = len(factual_projs)
+
+    for _ in range(n_bootstrap):
+        # Resample within each group
+        policy_sample = np.random.choice(policy_projs, size=n_policy, replace=True)
+        factual_sample = np.random.choice(factual_projs, size=n_factual, replace=True)
+
+        p_mean = np.mean(policy_sample)
+        f_mean = np.mean(factual_sample)
+
+        bootstrap_policy.append(p_mean)
+        bootstrap_factual.append(f_mean)
+        bootstrap_diffs.append(p_mean - f_mean)
+        if f_mean != 0:
+            bootstrap_ratios.append(p_mean / f_mean)
+
+    # Compute CIs (percentile method)
+    alpha = (1 - confidence) / 2
+
+    ratio_ci = (np.percentile(bootstrap_ratios, alpha * 100),
+                np.percentile(bootstrap_ratios, (1 - alpha) * 100))
+    diff_ci = (np.percentile(bootstrap_diffs, alpha * 100),
+               np.percentile(bootstrap_diffs, (1 - alpha) * 100))
+    policy_ci = (np.percentile(bootstrap_policy, alpha * 100),
+                 np.percentile(bootstrap_policy, (1 - alpha) * 100))
+    factual_ci = (np.percentile(bootstrap_factual, alpha * 100),
+                  np.percentile(bootstrap_factual, (1 - alpha) * 100))
+
+    # P-value approximation: proportion of bootstrap samples where ratio <= 1
+    p_value = np.mean(np.array(bootstrap_ratios) <= 1.0)
+
+    results = {
+        'policy_mean': float(policy_mean),
+        'factual_mean': float(factual_mean),
+        'ratio': float(ratio),
+        'difference': float(difference),
+        'policy_ci': (float(policy_ci[0]), float(policy_ci[1])),
+        'factual_ci': (float(factual_ci[0]), float(factual_ci[1])),
+        'ratio_ci': (float(ratio_ci[0]), float(ratio_ci[1])),
+        'diff_ci': (float(diff_ci[0]), float(diff_ci[1])),
+        'p_value': float(p_value),
+        'n_bootstrap': n_bootstrap,
+        'confidence': confidence,
+        'n_policy': n_policy,
+        'n_factual': n_factual
+    }
+
+    if print_output:
+        print("\n" + "=" * 60)
+        print("BOOTSTRAP CONFIDENCE INTERVALS FOR STEERING RATIO")
+        print("=" * 60)
+        print(f"\nSample sizes: Policy n={n_policy}, Factual n={n_factual}")
+        print(f"Bootstrap iterations: {n_bootstrap}")
+        print(f"\nPolicy mean movement:  {policy_mean:>8.2f}  [{policy_ci[0]:.2f}, {policy_ci[1]:.2f}]")
+        print(f"Factual mean movement: {factual_mean:>8.2f}  [{factual_ci[0]:.2f}, {factual_ci[1]:.2f}]")
+        print(f"\nRatio (policy/factual): {ratio:.3f}x  [{ratio_ci[0]:.3f}, {ratio_ci[1]:.3f}]")
+        print(f"Difference:             {difference:.2f}  [{diff_ci[0]:.2f}, {diff_ci[1]:.2f}]")
+        print(f"\nP(ratio <= 1.0): {p_value:.4f}")
+        if p_value < 0.05:
+            print("  → Significant at p < 0.05: Policy moves further than factual")
+        elif p_value < 0.10:
+            print("  → Marginally significant at p < 0.10")
+        else:
+            print("  → Not significant")
+
+    return results
+
+
+def bootstrap_loading_ratio(
+    base_data: ModelData,
+    instruct_data: ModelData,
+    position: str = 'last',
+    layer: Optional[int] = None,
+    top_k: int = 10,
+    n_bootstrap: int = 1000,
+    confidence: float = 0.95,
+    print_output: bool = True
+) -> Dict:
+    """
+    Compute bootstrap CIs for the policy/factual SVD loading ratio.
+
+    The loading ratio measures how much more heavily policy categories
+    load onto the top SVD components compared to factual categories.
+
+    Loading magnitude for category c = ||mean_c(U @ diag(S))[:top_k]||
+
+    Args:
+        base_data: ModelData for base model
+        instruct_data: ModelData for instruct model
+        position: Token position
+        layer: Specific layer or None
+        top_k: Number of top SVD components to consider
+        n_bootstrap: Number of bootstrap iterations
+        confidence: Confidence level
+        print_output: Whether to print results
+
+    Returns:
+        Dictionary with loading ratio and bootstrap CIs
+    """
+    from .loader import get_activation_matrix
+
+    X_base = get_activation_matrix(base_data, position, layer)
+    X_instruct = get_activation_matrix(instruct_data, position, layer)
+
+    categories = base_data.df['category'].values
+
+    # Compute difference matrix and SVD
+    D = X_instruct - X_base
+    D_centered = D - D.mean(axis=0)
+
+    U, S, Vt = np.linalg.svd(D_centered, full_matrices=False)
+
+    # Sample loadings on top-k components
+    top_k = min(top_k, len(S))
+    sample_loadings = U[:, :top_k] * S[:top_k]  # (n_samples, top_k)
+
+    # Compute loading magnitude per sample
+    sample_magnitudes = np.linalg.norm(sample_loadings, axis=1)
+
+    # Get masks
+    policy_mask = np.isin(categories, POLICY_CATEGORIES)
+    factual_mask = np.isin(categories, FACTUAL_CATEGORIES)
+
+    policy_mags = sample_magnitudes[policy_mask]
+    factual_mags = sample_magnitudes[factual_mask]
+
+    # Point estimates
+    policy_mean = np.mean(policy_mags)
+    factual_mean = np.mean(factual_mags)
+    ratio = policy_mean / factual_mean if factual_mean != 0 else np.inf
+
+    # Bootstrap
+    np.random.seed(42)
+    bootstrap_ratios = []
+
+    n_policy = len(policy_mags)
+    n_factual = len(factual_mags)
+
+    for _ in range(n_bootstrap):
+        policy_sample = np.random.choice(policy_mags, size=n_policy, replace=True)
+        factual_sample = np.random.choice(factual_mags, size=n_factual, replace=True)
+
+        p_mean = np.mean(policy_sample)
+        f_mean = np.mean(factual_sample)
+
+        if f_mean != 0:
+            bootstrap_ratios.append(p_mean / f_mean)
+
+    # Compute CIs
+    alpha = (1 - confidence) / 2
+    ratio_ci = (np.percentile(bootstrap_ratios, alpha * 100),
+                np.percentile(bootstrap_ratios, (1 - alpha) * 100))
+
+    # P-value: proportion where ratio <= 1
+    p_value = np.mean(np.array(bootstrap_ratios) <= 1.0)
+
+    results = {
+        'policy_mean_loading': float(policy_mean),
+        'factual_mean_loading': float(factual_mean),
+        'loading_ratio': float(ratio),
+        'ratio_ci': (float(ratio_ci[0]), float(ratio_ci[1])),
+        'p_value': float(p_value),
+        'top_k': top_k,
+        'n_bootstrap': n_bootstrap,
+        'confidence': confidence
+    }
+
+    if print_output:
+        print("\n" + "=" * 60)
+        print(f"BOOTSTRAP CI FOR SVD LOADING RATIO (top-{top_k} components)")
+        print("=" * 60)
+        print(f"\nPolicy mean loading magnitude:  {policy_mean:.3f}")
+        print(f"Factual mean loading magnitude: {factual_mean:.3f}")
+        print(f"\nLoading ratio: {ratio:.3f}x  [{ratio_ci[0]:.3f}, {ratio_ci[1]:.3f}]")
+        print(f"P(ratio <= 1.0): {p_value:.4f}")
+
+    return results
+
+
 def extract_steering_vector(
     base_data: ModelData,
     instruct_data: ModelData,
